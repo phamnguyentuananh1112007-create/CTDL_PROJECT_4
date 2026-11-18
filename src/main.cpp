@@ -10,8 +10,10 @@
 #include <stdexcept>
 #include <ctime>
 #include <filesystem>
-#include "Console.h"
-#include "Application.h"
+#include <thread>
+#include <atomic>
+#include "..\include\Console.h"
+#include "..\include\Application.h"
 
 #include "..\include\HangHoa.h"
 #include "..\include\DanhSachHangHoa.h"
@@ -685,7 +687,9 @@ void menuChinh(const int iRole, const string& strCurrentUsername, DanhSachHangHo
         Console::clear();
         Console::title("MENU CHINH HE THONG", Console::Color::Yellow);
         setColor(COLOR_CYAN);
-        cout << "Xin chao: " << strCurrentUsername << "  |  " << layThoiGianThucTe() << "\n";
+        cout << "Xin chao: " << strCurrentUsername << "  |  ";
+        COORD toaDoDongHo = layToaDoConTro();
+        cout << layThoiGianThucTe() << "\n";
 
         if (iRole == ROLE_ADMIN)
         {
@@ -728,8 +732,47 @@ void menuChinh(const int iRole, const string& strCurrentUsername, DanhSachHangHo
         cout << "0. Dang xuat\n";
         cout << "--------------------------------------------------------\n";
         cout << "Nhap lua chon cua ban: ";
-        if (!nhapLuaChon(iChon))
+
+        // Cap nhat dong ho moi giay trong khi cin dang cho nguoi dung nhap.
+        // WriteConsoleOutputCharacterA ghi truc tiep vao vi tri dong ho,
+        // khong di chuyen con tro nhap lieu cua Console.
+        atomic<bool> dangCapNhatDongHo(true);
+        thread luongDongHo([&]()
         {
+            HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+            while (dangCapNhatDongHo.load())
+            {
+                const string strThoiGian = layThoiGianThucTe();
+                DWORD soKyTuDaGhi = 0;
+                WriteConsoleOutputCharacterA(
+                    hConsole,
+                    strThoiGian.c_str(),
+                    static_cast<DWORD>(strThoiGian.length()),
+                    toaDoDongHo,
+                    &soKyTuDaGhi
+                );
+
+                // Kiem tra nhieu lan de co the dung luong nhanh sau khi nhap xong.
+                for (int i = 0; i < 10 && dangCapNhatDongHo.load(); ++i)
+                {
+                    Sleep(100);
+                }
+            }
+        });
+
+        const bool nhapThanhCong = nhapLuaChon(iChon);
+        dangCapNhatDongHo.store(false);
+        if (luongDongHo.joinable())
+        {
+            luongDongHo.join();
+        }
+
+        if (!nhapThanhCong)
+        {
+            if (cin.eof())
+            {
+                return;
+            }
             setColor(COLOR_RED);
             cout << "\n[-] Kieu du lieu khong hop le! Vui long nhap lai.\n";
             setColor(COLOR_DEFAULT);
