@@ -9,6 +9,7 @@
 #include <limits>
 #include <stdexcept>
 #include <ctime>
+#include <filesystem>
 
 #include "..\include\HangHoa.h"
 #include "..\include\DanhSachHangHoa.h"
@@ -42,6 +43,24 @@ const int ROLE_ADMIN = 2;
 
 const char* const FILE_ADMIN = "data/Admin.txt";
 const char* const FILE_ACCOUNT = "data/Account.txt";
+
+bool datThuMucLamViecVeThuMucDuAn()
+{
+#ifdef _WIN32
+    char szDuongDanExe[MAX_PATH] = {};
+    const DWORD iSoKyTu = GetModuleFileNameA(NULL, szDuongDanExe, MAX_PATH);
+    if (iSoKyTu == 0 || iSoKyTu == MAX_PATH)
+    {
+        return false;
+    }
+
+    const std::filesystem::path duongDanExe(szDuongDanExe);
+    const std::filesystem::path thuMucDuAn = duongDanExe.parent_path().parent_path();
+    return SetCurrentDirectoryA(thuMucDuAn.string().c_str()) != 0;
+#else
+    return false;
+#endif
+}
 
 typedef struct _TAIKHOAN
 {
@@ -997,6 +1016,15 @@ void menuChinh(const int iRole, const string& strCurrentUsername, DanhSachHangHo
 
 int main()
 {
+    if (!datThuMucLamViecVeThuMucDuAn())
+    {
+        setColor(COLOR_RED);
+        cout << "[!] Khong the xac dinh thu muc du an tu vi tri main.exe.\n";
+        setColor(COLOR_DEFAULT);
+        system("pause");
+        return 1;
+    }
+
     Admin adminAcc;
     QuanLyKhachHang qlKhachHang;
     DanhSachHangHoa dsHangHoa;
