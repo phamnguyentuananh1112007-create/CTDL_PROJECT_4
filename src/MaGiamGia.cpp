@@ -1,4 +1,5 @@
 #include "MaGiamGia.h"
+#include "Console.h"
 
 #include <cmath>
 #include <fstream>
@@ -129,7 +130,7 @@ bool MaGiamGia::nhap(const string& strMaGG, const string& strMaHH)
         {
             break;
         }
-        cout << "Gia tri khong hop le! Vui long nhap so nguyen > 0." << endl;
+        Console::warning("Gia tri khong hop le! Vui long nhap so nguyen > 0.");
     }
 
     while (true)
@@ -146,7 +147,7 @@ bool MaGiamGia::nhap(const string& strMaGG, const string& strMaHH)
         {
             break;
         }
-        cout << "Phan tram giam phai trong khoang (0, 100]!" << endl;
+        Console::warning("Phan tram giam phai trong khoang (0, 100]!");
     }
 
     while (true)
@@ -163,8 +164,8 @@ bool MaGiamGia::nhap(const string& strMaGG, const string& strMaHH)
         {
             return true;
         }
-        cout << "So luong con lai phai tu 0 den so luong toi da ("
-             << this->_iSoLuongToiDa << ")!" << endl;
+        Console::warning("So luong con lai phai tu 0 den so luong toi da (" +
+                         to_string(this->_iSoLuongToiDa) + ")!");
     }
 }
 
@@ -174,8 +175,18 @@ void MaGiamGia::xuat() const
          << setw(COL_WIDTH_MA_GG) << this->_strMaGiamGia
          << setw(COL_WIDTH_MA_HH_GG) << this->_strMaHang
          << setw(COL_WIDTH_SL_TOI_DA) << this->_iSoLuongToiDa
-         << setw(COL_WIDTH_PHAN_TRAM) << fixed << setprecision(1) << this->_dPhanTramGiam
-         << setw(COL_WIDTH_SL_CON_LAI) << this->_iSoLuongConLai << endl;
+         << setw(COL_WIDTH_PHAN_TRAM) << fixed << setprecision(1) << this->_dPhanTramGiam;
+
+    if (this->_iSoLuongConLai == 0)
+    {
+        Console::setColor(Console::Color::Red);
+    }
+    else
+    {
+        Console::setColor(Console::Color::Green);
+    }
+    cout << setw(COL_WIDTH_SL_CON_LAI) << this->_iSoLuongConLai << endl;
+    Console::setColor(Console::Color::Default);
 }
 
 void MaGiamGia::ghiFile(ofstream& fileOut) const

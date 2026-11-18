@@ -16,8 +16,6 @@ std::string HangHoaConsole::toLowerString(const std::string& strInput)
 
 bool HangHoaConsole::ngayHopLe(const std::string& strNgay)
 {
-    // Dung chung mot bo kiem tra de tranh giao dien va lop du lieu
-    // cho ra ket qua khac nhau.
     return HangHoa::ngayHopLe(strNgay);
 }
 
@@ -80,13 +78,13 @@ bool HangHoaConsole::docChuoiBatBuoc(const std::string& strThongBao, std::string
         strKetQua = HangHoaConsole::trim(strKetQua);
         if (strKetQua.empty())
         {
-            _output << "Thong tin khong duoc de trong. Vui long nhap lai.\n";
+            Console::warning("Thong tin khong duoc de trong. Vui long nhap lai.");
             continue;
         }
 
         if (strKetQua.find('|') != std::string::npos)
         {
-            _output << "Thong tin khong duoc chua ky tu '|'. Vui long nhap lai.\n";
+            Console::warning("Thong tin khong duoc chua ky tu '|'. Vui long nhap lai.");
             continue;
         }
 
@@ -109,7 +107,7 @@ bool HangHoaConsole::docGiaBan(double& dGiaBan) const
             return true;
         }
 
-        _output << "Gia ban khong hop le. Gia ban bat buoc phai lon hon 0. Vui long nhap lai.\n";
+        Console::warning("Gia ban khong hop le. Gia ban bat buoc phai lon hon 0. Vui long nhap lai.");
     }
 }
 
@@ -128,8 +126,7 @@ bool HangHoaConsole::docNgayNhapKho(std::string& strNgay) const
             return true;
         }
 
-        _output << "Ngay khong hop le. Vui long nhap theo dd/MM/yyyy "
-                << "va dam bao ngay ton tai tren lich.\n";
+        Console::warning("Ngay khong hop le. Vui long nhap theo dd/MM/yyyy va dam bao ngay ton tai tren lich.");
     }
 }
 
@@ -148,12 +145,22 @@ bool HangHoaConsole::docSoLuong(int& iSoLuong) const
             return true;
         }
 
-        _output << "So luong khong hop le. Vui long nhap so nguyen >= 0.\n";
+        Console::warning("So luong khong hop le. Vui long nhap so nguyen >= 0.");
     }
 }
 
 void HangHoaConsole::inTieuDeBang() const
 {
+    const std::size_t tongChieuRong = static_cast<std::size_t>(
+        COL_WIDTH_MA + COL_WIDTH_TEN + COL_WIDTH_NOI_SX +
+        COL_WIDTH_MAU + COL_WIDTH_GIA + COL_WIDTH_NGAY + COL_WIDTH_SL
+    );
+    const std::string vienDoi(tongChieuRong, '=');
+    const std::string vienDon(tongChieuRong, '-');
+
+    Console::setColor(Console::Color::Yellow);
+    _output << vienDoi << '\n';
+    Console::setColor(Console::Color::Cyan);
     _output << std::left
             << std::setw(COL_WIDTH_MA) << "Ma"
             << std::setw(COL_WIDTH_TEN) << "Ten Hang"
@@ -163,29 +170,32 @@ void HangHoaConsole::inTieuDeBang() const
             << std::setw(COL_WIDTH_NGAY) << "Ngay nhap"
             << std::setw(COL_WIDTH_SL) << "So luong"
             << '\n';
-
-    const std::string strDuongKe(
-        static_cast<std::string::size_type>(
-            COL_WIDTH_MA + COL_WIDTH_TEN + COL_WIDTH_NOI_SX +
-            COL_WIDTH_MAU + COL_WIDTH_GIA + COL_WIDTH_NGAY + COL_WIDTH_SL
-        ),
-        '-'
-    );
-    _output << strDuongKe << '\n';
+    Console::setColor(Console::Color::Yellow);
+    _output << vienDon << '\n';
+    Console::setColor(Console::Color::Default);
 }
 
 void HangHoaConsole::inMotHangHoa(const HangHoa& hangHoa) const
 {
     _output << std::left
-            << std::setw(COL_WIDTH_MA) << hangHoa.getMaHang()
-            << std::setw(COL_WIDTH_TEN) << hangHoa.getTenHang()
-            << std::setw(COL_WIDTH_NOI_SX) << hangHoa.getNoiSanXuat()
-            << std::setw(COL_WIDTH_MAU) << hangHoa.getMauSac()
+            << std::setw(COL_WIDTH_MA) << Console::fit(hangHoa.getMaHang(), COL_WIDTH_MA - 1)
+            << std::setw(COL_WIDTH_TEN) << Console::fit(hangHoa.getTenHang(), COL_WIDTH_TEN - 1)
+            << std::setw(COL_WIDTH_NOI_SX) << Console::fit(hangHoa.getNoiSanXuat(), COL_WIDTH_NOI_SX - 1)
+            << std::setw(COL_WIDTH_MAU) << Console::fit(hangHoa.getMauSac(), COL_WIDTH_MAU - 1)
             << std::setw(COL_WIDTH_GIA) << std::fixed << std::setprecision(0)
             << hangHoa.getGiaBan()
-            << std::setw(COL_WIDTH_NGAY) << hangHoa.getNgayNhapKho()
-            << std::setw(COL_WIDTH_SL) << hangHoa.getSoLuong()
-            << '\n';
+            << std::setw(COL_WIDTH_NGAY) << hangHoa.getNgayNhapKho();
+
+    if (hangHoa.getSoLuong() == 0)
+    {
+        Console::setColor(Console::Color::Red);
+    }
+    else
+    {
+        Console::setColor(Console::Color::Green);
+    }
+    _output << std::setw(COL_WIDTH_SL) << hangHoa.getSoLuong() << '\n';
+    Console::setColor(Console::Color::Default);
 }
 
 HangHoaConsole::HangHoaConsole(
@@ -199,6 +209,7 @@ void HangHoaConsole::hienThi(const DanhSachHangHoa& danhSach, const bool chiHang
 {
     const NODE* pCurrent = danhSach.getHead();
     bool bDaInTieuDe = false;
+    int iTongMatHang = 0;
 
     while (pCurrent != NULL)
     {
@@ -211,6 +222,7 @@ void HangHoaConsole::hienThi(const DanhSachHangHoa& danhSach, const bool chiHang
             }
 
             this->inMotHangHoa(pCurrent->Data);
+            ++iTongMatHang;
         }
 
         pCurrent = pCurrent->Next;
@@ -218,10 +230,21 @@ void HangHoaConsole::hienThi(const DanhSachHangHoa& danhSach, const bool chiHang
 
     if (!bDaInTieuDe)
     {
-        _output << (chiHangDangBan
-            ? "Hien khong co hang hoa nao dang ban.\n"
-            : "Danh sach hang hoa rong!\n");
+        Console::info(chiHangDangBan
+            ? "Hien khong co hang hoa nao dang ban."
+            : "Danh sach hang hoa rong!");
+        return;
     }
+
+    const std::size_t tongChieuRong = static_cast<std::size_t>(
+        COL_WIDTH_MA + COL_WIDTH_TEN + COL_WIDTH_NOI_SX +
+        COL_WIDTH_MAU + COL_WIDTH_GIA + COL_WIDTH_NGAY + COL_WIDTH_SL
+    );
+    Console::setColor(Console::Color::Yellow);
+    _output << std::string(tongChieuRong, '=') << '\n';
+    Console::setColor(Console::Color::Cyan);
+    _output << "Tong cong: " << iTongMatHang << " mat hang.\n";
+    Console::setColor(Console::Color::Default);
 }
 
 void HangHoaConsole::hienThiSapXep(
@@ -232,7 +255,6 @@ void HangHoaConsole::hienThiSapXep(
     std::vector<HangHoa> dsSapXep;
     const NODE* pCurrent = danhSach.getHead();
 
-    // Chuyen cac hang hoa can hien thi tu danh sach lien ket sang vector.
     while (pCurrent != NULL)
     {
         if (!chiHangDangBan || pCurrent->Data.getSoLuong() > 0)
@@ -244,18 +266,17 @@ void HangHoaConsole::hienThiSapXep(
 
     if (dsSapXep.empty())
     {
-        _output << (chiHangDangBan
-            ? "Hien khong co hang hoa nao dang ban.\n"
-            : "Danh sach hang hoa rong!\n");
+        Console::info(chiHangDangBan
+            ? "Hien khong co hang hoa nao dang ban."
+            : "Danh sach hang hoa rong!");
         return;
     }
 
-    // Su dung Bubble Sort duoc dinh nghia trong HangHoaSapXep.h.
     HangHoaSapXep::bubbleSort(dsSapXep, bTangDan);
 
-    _output << (bTangDan
-        ? "\nDanh sach hang hoa theo gia tu thap den cao:\n"
-        : "\nDanh sach hang hoa theo gia tu cao den thap:\n");
+    Console::info(bTangDan
+        ? "Danh sach hang hoa sap xep theo gia tu THAP den CAO:"
+        : "Danh sach hang hoa sap xep theo gia tu CAO den THAP:");
     this->inTieuDeBang();
 
     for (std::vector<HangHoa>::const_iterator it = dsSapXep.begin();
@@ -263,6 +284,16 @@ void HangHoaConsole::hienThiSapXep(
     {
         this->inMotHangHoa(*it);
     }
+
+    const std::size_t tongChieuRong = static_cast<std::size_t>(
+        COL_WIDTH_MA + COL_WIDTH_TEN + COL_WIDTH_NOI_SX +
+        COL_WIDTH_MAU + COL_WIDTH_GIA + COL_WIDTH_NGAY + COL_WIDTH_SL
+    );
+    Console::setColor(Console::Color::Yellow);
+    _output << std::string(tongChieuRong, '=') << '\n';
+    Console::setColor(Console::Color::Cyan);
+    _output << "Tong cong: " << dsSapXep.size() << " mat hang.\n";
+    Console::setColor(Console::Color::Default);
 }
 
 void HangHoaConsole::timKiem(const DanhSachHangHoa& danhSach) const
@@ -276,11 +307,12 @@ void HangHoaConsole::timKiem(const DanhSachHangHoa& danhSach) const
     strTuKhoa = HangHoaConsole::toLowerString(HangHoaConsole::trim(strTuKhoa));
     if (strTuKhoa.empty())
     {
-        _output << "Tu khoa tim kiem khong duoc de trong.\n";
+        Console::warning("Tu khoa tim kiem khong duoc de trong.");
         return;
     }
 
     bool bDaInTieuDe = false;
+    int iSoKetQua = 0;
     const NODE* pCurrent = danhSach.getHead();
 
     while (pCurrent != NULL)
@@ -294,12 +326,14 @@ void HangHoaConsole::timKiem(const DanhSachHangHoa& danhSach) const
         {
             if (!bDaInTieuDe)
             {
-                _output << "\nCac hang hoa dang ban tim thay:\n";
+                _output << '\n';
+                Console::info("Cac hang hoa dang ban tim thay:");
                 this->inTieuDeBang();
                 bDaInTieuDe = true;
             }
 
             this->inMotHangHoa(hangHoa);
+            ++iSoKetQua;
         }
 
         pCurrent = pCurrent->Next;
@@ -307,8 +341,20 @@ void HangHoaConsole::timKiem(const DanhSachHangHoa& danhSach) const
 
     if (!bDaInTieuDe)
     {
-        _output << "Khong tim thay hang hoa dang ban phu hop!\n";
+        _output << '\n';
+        Console::warning("Khong tim thay hang hoa dang ban phu hop!");
+        return;
     }
+
+    const std::size_t tongChieuRong = static_cast<std::size_t>(
+        COL_WIDTH_MA + COL_WIDTH_TEN + COL_WIDTH_NOI_SX +
+        COL_WIDTH_MAU + COL_WIDTH_GIA + COL_WIDTH_NGAY + COL_WIDTH_SL
+    );
+    Console::setColor(Console::Color::Yellow);
+    _output << std::string(tongChieuRong, '=') << '\n';
+    Console::setColor(Console::Color::Cyan);
+    _output << "Tim thay: " << iSoKetQua << " mat hang phu hop.\n";
+    Console::setColor(Console::Color::Default);
 }
 
 bool HangHoaConsole::themHangHoa(DanhSachHangHoa& danhSach) const
@@ -331,21 +377,21 @@ bool HangHoaConsole::themHangHoa(DanhSachHangHoa& danhSach) const
 
         if (strMa == "0")
         {
-            _output << "Da huy them hang hoa.\n";
+            Console::warning("Da huy them hang hoa.");
             return false;
         }
 
         if (!DanhSachHangHoa::maHangHopLe(strMa))
         {
-            _output << "Ma hang phai co dung "
-                    << DanhSachHangHoa::doDaiMaHangBatBuoc()
-                    << " ky tu. Vui long nhap lai.\n";
+            Console::warning("Ma hang phai co dung " +
+                             std::to_string(DanhSachHangHoa::doDaiMaHangBatBuoc()) +
+                             " ky tu. Vui long nhap lai.");
             continue;
         }
 
         if (danhSach.kiemTraMa(strMa))
         {
-            _output << "Ma hang da ton tai. Vui long nhap ma khac.\n";
+            Console::warning("Ma hang da ton tai. Vui long nhap ma khac.");
             continue;
         }
 
@@ -366,7 +412,7 @@ bool HangHoaConsole::themHangHoa(DanhSachHangHoa& danhSach) const
         !this->docNgayNhapKho(strNgayNhapKho) ||
         !this->docSoLuong(iSoLuong))
     {
-        _output << "Da huy thao tac do ket thuc dau vao.\n";
+        Console::warning("Da huy thao tac do ket thuc dau vao.");
         return false;
     }
 
@@ -377,17 +423,18 @@ bool HangHoaConsole::themHangHoa(DanhSachHangHoa& danhSach) const
 
     if (!hangHoaMoi.duLieuHopLe())
     {
-        _output << "Khong the them hang hoa: gia ban phai > 0 va ngay nhap kho phai la ngay hop le.\n";
+        Console::error("Khong the them hang hoa: gia ban phai > 0 va ngay nhap kho phai la ngay hop le.");
         return false;
     }
 
     if (!danhSach.them(hangHoaMoi))
     {
-        _output << "Khong the them hang hoa. Ma hang co the da ton tai.\n";
+        Console::error("Khong the them hang hoa. Ma hang co the da ton tai.");
         return false;
     }
 
-    _output << "Them hang hoa thanh cong!\n";
+    _output << '\n';
+    Console::success("Them hang hoa thanh cong!");
     return true;
 }
 
@@ -407,7 +454,7 @@ bool HangHoaConsole::xoaHangHoa(
         strMa = DanhSachHangHoa::chuanHoaMaHang(strMa);
         if (strMa == "0")
         {
-            _output << "Da huy xoa hang hoa.\n";
+            Console::warning("Da huy xoa hang hoa.");
             return false;
         }
 
@@ -415,14 +462,14 @@ bool HangHoaConsole::xoaHangHoa(
         {
             if (kiemTraDangCho && kiemTraDangCho(strMa))
             {
-                _output << "Khong the xoa ma hang " << strMa
-                        << " vi van con don hang dang cho xu ly tham chieu den mat hang nay.\n";
+                Console::error("Khong the xoa ma hang " + strMa +
+                               " vi van con don hang dang cho xu ly tham chieu den mat hang nay.");
                 return false;
             }
             break;
         }
 
-        _output << "Khong tim thay ma hang. Vui long nhap lai.\n";
+        Console::warning("Khong tim thay ma hang. Vui long nhap lai.");
     }
 
     while (true)
@@ -464,7 +511,7 @@ bool HangHoaConsole::capNhatSoLuong(DanhSachHangHoa& danhSach) const
         strMa = DanhSachHangHoa::chuanHoaMaHang(strMa);
         if (strMa == "0")
         {
-            _output << "Da huy cap nhat so luong.\n";
+            Console::warning("Da huy cap nhat so luong.");
             return false;
         }
 
@@ -473,7 +520,7 @@ bool HangHoaConsole::capNhatSoLuong(DanhSachHangHoa& danhSach) const
             break;
         }
 
-        _output << "Khong tim thay ma hang. Vui long nhap lai.\n";
+        Console::warning("Khong tim thay ma hang. Vui long nhap lai.");
     }
 
     int iSoLuongMoi = 0;
@@ -484,10 +531,11 @@ bool HangHoaConsole::capNhatSoLuong(DanhSachHangHoa& danhSach) const
 
     if (!danhSach.capNhatSoLuongTheoMa(strMa, iSoLuongMoi))
     {
-        _output << "Cap nhat so luong that bai.\n";
+        Console::error("Cap nhat so luong that bai.");
         return false;
     }
 
-    _output << "Cap nhat so luong thanh cong!\n";
+    _output << '\n';
+    Console::success("Cap nhat so luong thanh cong!");
     return true;
 }

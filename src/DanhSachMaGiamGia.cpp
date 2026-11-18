@@ -1,5 +1,6 @@
 #include "DanhSachMaGiamGia.h"
 #include "NodeMaGiamGia.h"
+#include "Console.h"
 
 #include <windows.h>
 #include <cstdio>
@@ -25,13 +26,23 @@ string DanhSachMaGiamGia::trim(const string& strInput)
 
 void DanhSachMaGiamGia::inTieuDeBang() const
 {
+    const size_t tongChieuRong = static_cast<size_t>(
+        COL_WIDTH_MA_GG + COL_WIDTH_MA_HH_GG + COL_WIDTH_SL_TOI_DA +
+        COL_WIDTH_PHAN_TRAM + COL_WIDTH_SL_CON_LAI
+    );
+
+    Console::setColor(Console::Color::Yellow);
+    cout << string(tongChieuRong, '=') << endl;
+    Console::setColor(Console::Color::Cyan);
     cout << left
          << setw(COL_WIDTH_MA_GG) << "Ma Giam Gia"
          << setw(COL_WIDTH_MA_HH_GG) << "Ma Hang"
          << setw(COL_WIDTH_SL_TOI_DA) << "SL Toi Da/Mat Hang"
          << setw(COL_WIDTH_PHAN_TRAM) << "Giam (%)"
          << setw(COL_WIDTH_SL_CON_LAI) << "SL Con Lai" << endl;
-    cout << "-------------------------------------------------------------------------------" << endl;
+    Console::setColor(Console::Color::Yellow);
+    cout << string(tongChieuRong, '-') << endl;
+    Console::setColor(Console::Color::Default);
 }
 
 bool DanhSachMaGiamGia::kiemTraMa(const string& strMaGG) const
@@ -108,18 +119,30 @@ void DanhSachMaGiamGia::hienThi() const
 {
     if (this->_danhSach.empty())
     {
-        cout << "Danh sach ma giam gia rong!" << endl;
+        Console::info("Danh sach ma giam gia rong!");
         return;
     }
 
     this->inTieuDeBang();
 
+    int iTongMa = 0;
     const NODEMAGIAMGIA* pCurrent = this->_danhSach.head();
     while (pCurrent != nullptr)
     {
         pCurrent->Data.xuat();
+        ++iTongMa;
         pCurrent = pCurrent->Next;
     }
+
+    const size_t tongChieuRong = static_cast<size_t>(
+        COL_WIDTH_MA_GG + COL_WIDTH_MA_HH_GG + COL_WIDTH_SL_TOI_DA +
+        COL_WIDTH_PHAN_TRAM + COL_WIDTH_SL_CON_LAI
+    );
+    Console::setColor(Console::Color::Yellow);
+    cout << string(tongChieuRong, '=') << endl;
+    Console::setColor(Console::Color::Cyan);
+    cout << "Tong cong: " << iTongMa << " ma giam gia." << endl;
+    Console::setColor(Console::Color::Default);
 }
 
 bool DanhSachMaGiamGia::hienThiTheoMaHang(const string& strMaHang) const
@@ -140,28 +163,45 @@ bool DanhSachMaGiamGia::hienThiTheoMaHang(const string& strMaHang) const
         }
         pCurrent = pCurrent->Next;
     }
+
+    if (bCoMa)
+    {
+        const size_t tongChieuRong = static_cast<size_t>(
+            COL_WIDTH_MA_GG + COL_WIDTH_MA_HH_GG + COL_WIDTH_SL_TOI_DA +
+            COL_WIDTH_PHAN_TRAM + COL_WIDTH_SL_CON_LAI
+        );
+        Console::setColor(Console::Color::Yellow);
+        cout << string(tongChieuRong, '=') << endl;
+        Console::setColor(Console::Color::Default);
+    }
     return bCoMa;
 }
 
 bool DanhSachMaGiamGia::themMaGiamGia(const DanhSachHangHoa& dsHangHoa)
 {
     string strMaGG = "";
-    cout << "Nhap ma giam gia moi (VD: KM01, SALE20): ";
+    cout << "Nhap ma giam gia moi (VD: KM01, SALE20 - nhap 0 de huy): ";
     if (!getline(cin, strMaGG))
     {
         return false;
     }
     strMaGG = DanhSachMaGiamGia::trim(strMaGG);
 
+    if (strMaGG == "0")
+    {
+        Console::warning("Da huy them ma giam gia.");
+        return false;
+    }
+
     if (strMaGG.empty() || strMaGG.find_first_of("|\r\n") != string::npos)
     {
-        cout << "Ma giam gia khong duoc de trong hoac chua ky tu phan cach!" << endl;
+        Console::error("Ma giam gia khong duoc de trong hoac chua ky tu phan cach!");
         return false;
     }
 
     if (this->kiemTraMa(strMaGG))
     {
-        cout << "Ma giam gia da ton tai!" << endl;
+        Console::error("Ma giam gia da ton tai!");
         return false;
     }
 
@@ -177,7 +217,7 @@ bool DanhSachMaGiamGia::themMaGiamGia(const DanhSachHangHoa& dsHangHoa)
     if (!DanhSachHangHoa::maHangHopLe(strMaHH) ||
         !dsHangHoa.kiemTraMa(strMaHH))
     {
-        cout << "Ma hang khong ton tai trong danh sach hang hoa!" << endl;
+        Console::error("Ma hang khong ton tai trong danh sach hang hoa!");
         return false;
     }
 
@@ -188,11 +228,12 @@ bool DanhSachMaGiamGia::themMaGiamGia(const DanhSachHangHoa& dsHangHoa)
     }
     if (!this->them(maGiamGiaMoi))
     {
-        cout << "Thong tin ma giam gia khong hop le hoac bi trung!" << endl;
+        Console::error("Thong tin ma giam gia khong hop le hoac bi trung!");
         return false;
     }
 
-    cout << "Them ma giam gia thanh cong!" << endl;
+    cout << endl;
+    Console::success("Them ma giam gia thanh cong!");
     return true;
 }
 
@@ -200,19 +241,25 @@ bool DanhSachMaGiamGia::capNhatSoLuong()
 {
     string strMaGG = "";
 
-    cout << "Nhap ma giam gia can cap nhat: ";
+    cout << "Nhap ma giam gia can cap nhat (nhap 0 de huy): ";
     if (!getline(cin, strMaGG))
     {
         return false;
     }
     strMaGG = DanhSachMaGiamGia::trim(strMaGG);
 
+    if (strMaGG == "0")
+    {
+        Console::warning("Da huy cap nhat ma giam gia.");
+        return false;
+    }
+
     PNODEMAGIAMGIA pCurrent = this->_danhSach.head();
     while (pCurrent != nullptr)
     {
         if (pCurrent->Data.getMaGiamGia() == strMaGG)
         {
-            cout << "Nhap so luong con lai moi: ";
+            cout << "Nhap so luong con lai moi (toi da " << pCurrent->Data.getSoLuongToiDa() << "): ";
             string strSlMoi;
             if (!getline(cin, strSlMoi))
             {
@@ -223,7 +270,7 @@ bool DanhSachMaGiamGia::capNhatSoLuong()
             long long iSlMoi = -1;
             if (!(streamSoLuong >> iSlMoi))
             {
-                cout << "So luong khong hop le!" << endl;
+                Console::error("So luong khong hop le!");
                 return false;
             }
             streamSoLuong >> ws;
@@ -231,39 +278,59 @@ bool DanhSachMaGiamGia::capNhatSoLuong()
                 iSlMoi > pCurrent->Data.getSoLuongToiDa() ||
                 iSlMoi > (numeric_limits<int>::max)())
             {
-                cout << "So luong phai la so nguyen tu 0 den so luong toi da ("
-                     << pCurrent->Data.getSoLuongToiDa() << ")!" << endl;
+                Console::error("So luong phai la so nguyen tu 0 den so luong toi da (" +
+                               to_string(pCurrent->Data.getSoLuongToiDa()) + ")!");
                 return false;
             }
 
             if (!pCurrent->Data.setSoLuongConLai(static_cast<int>(iSlMoi)))
             {
-                cout << "Khong the cap nhat so luong ma giam gia!" << endl;
+                Console::error("Khong the cap nhat so luong ma giam gia!");
                 return false;
             }
-            cout << "Cap nhat so luong ma giam gia thanh cong!" << endl;
+            cout << endl;
+            Console::success("Cap nhat so luong ma giam gia thanh cong!");
             return true;
         }
         pCurrent = pCurrent->Next;
     }
 
-    cout << "Khong tim thay ma giam gia!" << endl;
+    Console::error("Khong tim thay ma giam gia!");
     return false;
 }
 
 bool DanhSachMaGiamGia::xoaMaGiamGia()
 {
     string strMaGG = "";
-    cout << "Nhap ma giam gia can xoa: ";
+    cout << "Nhap ma giam gia can xoa (nhap 0 de huy): ";
     if (!getline(cin, strMaGG))
     {
         return false;
     }
     strMaGG = DanhSachMaGiamGia::trim(strMaGG);
 
+    if (strMaGG == "0")
+    {
+        Console::warning("Da huy xoa ma giam gia.");
+        return false;
+    }
+
     if (this->_danhSach.empty())
     {
-        cout << "Danh sach ma giam gia rong!" << endl;
+        Console::info("Danh sach ma giam gia rong!");
+        return false;
+    }
+
+    if (!this->kiemTraMa(strMaGG))
+    {
+        Console::error("Khong tim thay ma giam gia!");
+        return false;
+    }
+
+    bool bDaHuy = false;
+    if (!Console::yesNo("Xac nhan xoa ma giam gia " + strMaGG + "?", bDaHuy) || bDaHuy)
+    {
+        Console::warning("Da huy thao tac xoa ma giam gia.");
         return false;
     }
 
@@ -273,11 +340,11 @@ bool DanhSachMaGiamGia::xoaMaGiamGia()
                 return maGiamGia.getMaGiamGia() == strMaGG;
             }))
     {
-        cout << "Xoa ma giam gia thanh cong!" << endl;
+        Console::success("Xoa ma giam gia thanh cong!");
         return true;
     }
 
-    cout << "Khong tim thay ma giam gia!" << endl;
+    Console::error("Khong tim thay ma giam gia!");
     return false;
 }
 

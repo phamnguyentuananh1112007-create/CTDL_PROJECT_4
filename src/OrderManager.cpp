@@ -48,8 +48,6 @@ bool OrderManager::coKyTuPhanCach(const std::string& strInput)
 
 bool OrderManager::ngayHopLe(const std::string& strNgay)
 {
-    // Chap nhan ca dd/MM/yyyy (10 ky tu, tuong thich don cu)
-    // va dd/MM/yyyy HH:mm:ss (19 ky tu, dinh dang moi co gio phut giay).
     if (strNgay.size() != 10 && strNgay.size() != 19)
     {
         return false;
@@ -91,7 +89,6 @@ bool OrderManager::ngayHopLe(const std::string& strNgay)
         return false;
     }
 
-    // Neu co them phan gio phut giay (dd/MM/yyyy HH:mm:ss)
     if (strNgay.size() == 19)
     {
         if (strNgay[10] != ' ' || strNgay[13] != ':' || strNgay[16] != ':')
@@ -227,8 +224,8 @@ bool OrderManager::nhapSoNguyen(const std::string& strThongBao, const int iGiaTr
         {
             return true;
         }
-        std::cout << "Gia tri khong hop le. Vui long nhap so nguyen >= "
-             << iGiaTriNhoNhat << ".\n";
+        Console::warning("Gia tri khong hop le. Vui long nhap so nguyen >= " +
+                         std::to_string(iGiaTriNhoNhat) + ".");
     }
 }
 
@@ -248,11 +245,11 @@ bool OrderManager::nhapChuoiBatBuoc(const std::string& strThongBao, std::string&
         }
         if (coKyTuPhanCach(strKetQua))
         {
-            std::cout << "Thong tin khong duoc chua ky tu | vi day la ky tu phan cach trong tep DonHang.txt.\n";
+            Console::warning("Thong tin khong duoc chua ky tu '|' vi day la ky tu phan cach du lieu.");
         }
         else
         {
-            std::cout << "Thong tin khong duoc de trong. Vui long nhap lai.\n";
+            Console::warning("Thong tin khong duoc de trong. Vui long nhap lai.");
         }
     }
 }
@@ -283,7 +280,6 @@ std::string OrderManager::dinhDangThoiGianHienThi(const std::string& strNgayDat)
 {
     if (strNgayDat.size() == 19)
     {
-        // Tach dd/MM/yyyy (0..9) va HH:mm:ss (11..18)
         const std::string strNgay = strNgayDat.substr(0, 10);
         const std::string strGio = strNgayDat.substr(11, 8);
         return strGio + " - Ngay " + strNgay;
@@ -424,9 +420,6 @@ bool OrderManager::docMotDonHang(const std::string& strDong, DonHang& donHang) c
     const std::string strTongTien = trim(truong[6 + iOffset]);
     const std::string strChiTiet = trim(truong[7 + iOffset]);
 
-    // Dinh dang 10 truong moi co them co tonKhoDaTru (1/0).
-    // Cac don cu: DA_XU_LY da tru kho tai thoi diem xu ly; CHO_XU_LY chua tru;
-    // DA_HUY khong con giu hang. Don CHO_XU_LY cu se duoc giu kho mot lan khi docFile.
     if (truong.size() == 10)
     {
         const std::string strTonKhoDaTru = trim(truong[9]);
@@ -443,7 +436,6 @@ bool OrderManager::docMotDonHang(const std::string& strDong, DonHang& donHang) c
 
     if (!chuyenChuoiSangSoNguyen(strMaDon, donHang.maDonHang) ||
         donHang.maDonHang <= 0 ||
-        !truongBatBuocHopLe(donHang.tenKhachHang) ||
         !truongBatBuocHopLe(donHang.tenKhachHang) ||
         !truongBatBuocHopLe(donHang.taiKhoan) ||
         !truongBatBuocHopLe(donHang.diaChi) ||
@@ -476,31 +468,69 @@ bool OrderManager::docMotDonHang(const std::string& strDong, DonHang& donHang) c
 
 void OrderManager::inThongTinDonHang(const DonHang& donHang) const
 {
-    std::cout << "\nMa don hang: " << donHang.maDonHang << '\n'
-         << "Trang thai: " << donHang.trangThai << '\n'
-         << "Ten khach hang: " << donHang.tenKhachHang << '\n'
-         << "Tai khoan: " << donHang.taiKhoan << '\n'
-         << "Dia chi: " << donHang.diaChi << '\n'
-         << "So dien thoai: " << donHang.soDienThoai << '\n'
-         << "Thoi gian dat don: " << dinhDangThoiGianHienThi(donHang.ngayDat) << '\n'
-         << "Chi tiet don hang:\n";
+    const std::string vienDoi(60, '=');
+    const std::string vienDon(60, '-');
 
-    std::cout << std::left << std::setw(12) << "Ma hang"
-         << std::setw(12) << "So luong"
-         << std::setw(18) << "Don gia"
-         << std::setw(18) << "Thanh tien" << '\n';
-    std::cout << "------------------------------------------------------------\n";
+    Console::setColor(Console::Color::Yellow);
+    std::cout << '\n' << vienDoi << '\n';
+
+    Console::setColor(Console::Color::Cyan);
+    std::cout << " DON HANG #" << donHang.maDonHang << "   |   Trang thai: ";
+    if (donHang.trangThai == TRANG_THAI_DA_XU_LY)
+    {
+        Console::setColor(Console::Color::Green);
+    }
+    else if (donHang.trangThai == TRANG_THAI_DA_HUY)
+    {
+        Console::setColor(Console::Color::Red);
+    }
+    else
+    {
+        Console::setColor(Console::Color::Yellow);
+    }
+    std::cout << donHang.trangThai << '\n';
+
+    Console::setColor(Console::Color::Yellow);
+    std::cout << vienDon << '\n';
+    Console::setColor(Console::Color::Default);
+
+    std::cout << " Khach hang : " << donHang.tenKhachHang
+              << " (Tai khoan: " << donHang.taiKhoan << ")\n"
+              << " So DT      : " << donHang.soDienThoai << '\n'
+              << " Dia chi    : " << donHang.diaChi << '\n'
+              << " Thoi gian  : " << dinhDangThoiGianHienThi(donHang.ngayDat) << '\n';
+
+    Console::setColor(Console::Color::Yellow);
+    std::cout << vienDon << '\n';
+    Console::setColor(Console::Color::Cyan);
+    std::cout << std::left
+              << std::setw(12) << " Ma hang"
+              << std::setw(12) << "So luong"
+              << std::setw(18) << "Don gia (VND)"
+              << std::setw(18) << "Thanh tien (VND)" << '\n';
+    Console::setColor(Console::Color::Yellow);
+    std::cout << vienDon << '\n';
+    Console::setColor(Console::Color::Default);
 
     for (std::size_t i = 0; i < donHang.chiTiet.size(); ++i)
     {
         const ChiTietDonHang& chiTiet = donHang.chiTiet[i];
-        std::cout << std::left << std::setw(12) << chiTiet.maHang
-             << std::setw(12) << chiTiet.soLuong
-             << std::setw(18) << std::fixed << std::setprecision(0) << chiTiet.donGia
-             << std::setw(18) << std::fixed << std::setprecision(0)
-             << chiTiet.donGia * chiTiet.soLuong << '\n';
+        std::cout << " " << std::left
+                  << std::setw(11) << chiTiet.maHang
+                  << std::setw(12) << chiTiet.soLuong
+                  << std::setw(18) << std::fixed << std::setprecision(0) << chiTiet.donGia
+                  << std::setw(18) << std::fixed << std::setprecision(0)
+                  << chiTiet.donGia * chiTiet.soLuong << '\n';
     }
-    std::cout << "Tong tien: " << std::fixed << std::setprecision(0) << donHang.tongTien << " VND\n";
+
+    Console::setColor(Console::Color::Yellow);
+    std::cout << vienDon << '\n';
+    Console::setColor(Console::Color::Green);
+    std::cout << " TONG THANH TOAN: " << std::fixed << std::setprecision(0)
+              << donHang.tongTien << " VND\n";
+    Console::setColor(Console::Color::Yellow);
+    std::cout << vienDoi << '\n';
+    Console::setColor(Console::Color::Default);
 }
 
 bool OrderManager::kiemTraDuHang(const DonHang& donHang, std::string& strLyDo) const
@@ -511,8 +541,6 @@ bool OrderManager::kiemTraDuHang(const DonHang& donHang, std::string& strLyDo) c
         return false;
     }
 
-    // Ton kho hien tai la so luong con lai sau khi da giu hang cho don nay.
-    // Khi xu ly don chi doi trang thai, tuyet doi khong tru kho lan thu hai.
     for (std::size_t i = 0; i < donHang.chiTiet.size(); ++i)
     {
         HangHoa hangHoa;
@@ -582,7 +610,7 @@ bool OrderManager::thucHienHuyDonTheoMa(const int iMaDon, const std::string& str
     const int iViTri = timViTriDonTheoMa(iMaDon);
     if (iViTri < 0)
     {
-        std::cout << "Khong tim thay don hang #" << iMaDon << ".\n";
+        Console::error("Khong tim thay don hang #" + std::to_string(iMaDon) + ".");
         return false;
     }
 
@@ -590,14 +618,14 @@ bool OrderManager::thucHienHuyDonTheoMa(const int iMaDon, const std::string& str
 
     if (!strTaiKhoanKiemTra.empty() && donHang.taiKhoan != strTaiKhoanKiemTra)
     {
-        std::cout << "Ban khong co quyen huy don hang #" << iMaDon << ".\n";
+        Console::error("Ban khong co quyen huy don hang #" + std::to_string(iMaDon) + ".");
         return false;
     }
 
     if (donHang.trangThai != TRANG_THAI_CHO_XU_LY)
     {
-        std::cout << "Chi co the huy don hang dang o trang thai " << TRANG_THAI_CHO_XU_LY
-                  << ". (Trang thai hien tai: " << donHang.trangThai << ")\n";
+        Console::warning("Chi co the huy don hang dang o trang thai " + std::string(TRANG_THAI_CHO_XU_LY) +
+                         ". (Trang thai hien tai: " + donHang.trangThai + ")");
         return false;
     }
 
@@ -613,13 +641,12 @@ bool OrderManager::thucHienHuyDonTheoMa(const int iMaDon, const std::string& str
     const bool bTonKhoDaTruCu = donHang.tonKhoDaTru;
     DanhSachHangHoa danhSachKhoTruoc = _dsHangHoa;
 
-    // Don CHO_XU_LY da giu hang khi dat. Huy don phai hoan lai dung so luong.
     if (bTonKhoDaTruCu)
     {
         std::string strLyDoHoanKho = "";
         if (!thayDoiTonKhoTheoDon(donHang, false, strLyDoHoanKho))
         {
-            std::cout << "Khong the hoan ton kho khi huy don: " << strLyDoHoanKho << "\n";
+            Console::error("Khong the hoan ton kho khi huy don: " + strLyDoHoanKho);
             return false;
         }
     }
@@ -633,8 +660,7 @@ bool OrderManager::thucHienHuyDonTheoMa(const int iMaDon, const std::string& str
         _dsHangHoa.swap(danhSachKhoTruoc);
         donHang.trangThai = strTrangThaiCu;
         donHang.tonKhoDaTru = bTonKhoDaTruCu;
-        std::cout << "Khong the luu ton kho sau khi hoan hang. Huy don that bai. "
-                  << strLoiLuuKho << "\n";
+        Console::error("Khong the luu ton kho sau khi hoan hang. Huy don that bai. " + strLoiLuuKho);
         return false;
     }
 
@@ -652,17 +678,19 @@ bool OrderManager::thucHienHuyDonTheoMa(const int iMaDon, const std::string& str
                           << strLoiKhoiPhuc << "\n";
             }
         }
-        std::cout << "Khong the luu file DonHang.txt. Huy don hang that bai; ton kho da duoc khoi phuc neu can.\n";
+        Console::error("Khong the luu file DonHang.txt. Huy don hang that bai; ton kho da duoc khoi phuc neu can.");
         return false;
     }
 
     taiTaoHangDoiChoXuLy();
-    std::cout << "\n[+] Da huy don hang #" << iMaDon;
+    std::cout << '\n';
+    std::string strThongBao = "Da huy don hang #" + std::to_string(iMaDon);
     if (bTonKhoDaTruCu)
     {
-        std::cout << ". So luong san pham da duoc hoan lai vao ton kho";
+        strThongBao += ". So luong san pham da duoc hoan lai vao ton kho";
     }
-    std::cout << ".\n";
+    strThongBao += ".";
+    Console::success(strThongBao);
     return true;
 }
 
@@ -757,8 +785,6 @@ void OrderManager::docFile()
     }
     fileIn.close();
 
-    // Chuyen cac don CHO_XU_LY cu sang co che giu kho ngay khi dat.
-    // Co tonKhoDaTru duoc luu trong DonHang.txt, nen moi don chi duoc tru mot lan.
     DanhSachHangHoa danhSachKhoBanDau = _dsHangHoa;
     std::vector<std::size_t> dsDonDaGiuKho;
     bool bDaThayDoiTonKho = false;
@@ -968,12 +994,16 @@ void OrderManager::datHang(const std::string& strTaiKhoan)
 {
     std::vector<ChiTietDonHang> dsGioHang;
     std::string strMaHang = "";
-    std::cout << "\n=== TAO DON HANG (" << layNgayHienTai() << ") ===\n";
+    Console::info("TAO DON HANG (" + layNgayHienTai() + ")");
+    if (!_strMaGiamGiaChoDonTiepTheo.empty())
+    {
+        Console::info("Ma giam gia dang cho ap dung: " + _strMaGiamGiaChoDonTiepTheo);
+    }
     std::cout << "Nhap ma hang can mua (nhap 0 de ket thuc chon hang).\n";
 
     while (true)
     {
-        std::cout << "Ma hang: ";
+        std::cout << "\nMa hang: ";
         if (!std::getline(std::cin, strMaHang))
         {
             return;
@@ -985,18 +1015,17 @@ void OrderManager::datHang(const std::string& strTaiKhoan)
         }
         if (strMaHang.empty())
         {
-            std::cout << "Ma hang khong duoc de trong.\n";
+            Console::warning("Ma hang khong duoc de trong.");
             continue;
         }
 
         HangHoa hangHoa;
         if (!_dsHangHoa.layHangHoaTheoMa(strMaHang, hangHoa))
         {
-            std::cout << "Khong tim thay ma hang " << strMaHang << ".\n";
+            Console::error("Khong tim thay ma hang " + strMaHang + ".");
             continue;
         }
 
-        // Ton kho hien tai da tru cac don cho xu ly, vi moi don duoc giu hang ngay khi dat.
         int iDaChonTrongGio = 0;
         for (std::size_t i = 0; i < dsGioHang.size(); ++i)
         {
@@ -1010,16 +1039,16 @@ void OrderManager::datHang(const std::string& strTaiKhoan)
         const long long iSoLuongCoTheDat =
             static_cast<long long>(hangHoa.getSoLuong()) - iDonCuChuaGiu - iDaChonTrongGio;
 
-        std::cout << "San pham: " << hangHoa.getTenHang()
-             << " | Gia: " << std::fixed << std::setprecision(0) << hangHoa.getGiaBan()
-             << " VND | Ton kho con lai: " << hangHoa.getSoLuong()
-             << " | Don cu chua giu kho: " << iDonCuChuaGiu
-             << " | Da chon trong gio: " << iDaChonTrongGio
-             << " | Co the dat them: " << std::max(0LL, iSoLuongCoTheDat) << '\n';
+        Console::setColor(Console::Color::Cyan);
+        std::cout << " -> San pham: " << hangHoa.getTenHang()
+                  << " | Gia: " << std::fixed << std::setprecision(0) << hangHoa.getGiaBan()
+                  << " VND | Kha dung: " << std::max(0LL, iSoLuongCoTheDat)
+                  << " (Da chon: " << iDaChonTrongGio << ")\n";
+        Console::setColor(Console::Color::Default);
 
         if (iSoLuongCoTheDat <= 0)
         {
-            std::cout << "Mat hang nay da het ton kho kha dung.\n";
+            Console::warning("Mat hang nay da het ton kho kha dung.");
             continue;
         }
 
@@ -1045,8 +1074,8 @@ void OrderManager::datHang(const std::string& strTaiKhoan)
             static_cast<long long>(hangHoa.getSoLuong()) - iDonCuChuaGiu;
         if (iTongCanDat > iCoTheDat)
         {
-            std::cout << "So luong vuot qua ton kho kha dung. Ban co the dat them toi da "
-                 << std::max(0LL, iCoTheDat - iSoLuongCu) << " san pham ma nay.\n";
+            Console::warning("So luong vuot qua ton kho kha dung. Ban co the dat them toi da " +
+                             std::to_string(std::max(0LL, iCoTheDat - iSoLuongCu)) + " san pham ma nay.");
             continue;
         }
 
@@ -1058,12 +1087,12 @@ void OrderManager::datHang(const std::string& strTaiKhoan)
         {
             dsGioHang.push_back(ChiTietDonHang(strMaHang, iSoLuong, hangHoa.getGiaBan()));
         }
-        std::cout << "Da them san pham vao gio hang.\n";
+        Console::success("Da them san pham vao gio hang.");
     }
 
     if (dsGioHang.empty())
     {
-        std::cout << "Gio hang rong. Khong tao don hang.\n";
+        Console::warning("Gio hang rong. Khong tao don hang.");
         return;
     }
 
@@ -1103,38 +1132,61 @@ void OrderManager::datHang(const std::string& strTaiKhoan)
 
         if (!bApDungMaGiamGia)
         {
-            std::cout << "Ma giam gia " << _strMaGiamGiaChoDonTiepTheo
-                 << " khong kha dung hoac khong ap dung cho san pham trong gio hang.\n";
-            std::cout << "1. Tiep tuc dat hang khong ap ma\n"
-                 << "0. Huy tao don hang\n"
-                 << "Lua chon: ";
+            Console::warning("Ma giam gia " + _strMaGiamGiaChoDonTiepTheo +
+                             " khong kha dung hoac khong ap dung cho san pham trong gio hang.");
+            Console::menu({"Tiep tuc dat hang khong ap ma"}, "Huy tao don hang");
+            std::cout << "Lua chon: ";
             std::string strLuaChon = "";
             if (!std::getline(std::cin, strLuaChon) || trim(strLuaChon) != "1")
             {
-                std::cout << "Da huy tao don. Ma giam gia van duoc giu de thu lai.\n";
+                Console::info("Da huy tao don. Ma giam gia van duoc giu de thu lai.");
                 return;
             }
         }
     }
 
-    std::cout << "\n=== XAC NHAN DON HANG ===\n";
-    std::cout << std::left << std::setw(12) << "Ma hang" << std::setw(12) << "So luong"
-         << std::setw(18) << "Don gia" << std::setw(18) << "Thanh tien" << '\n';
-    std::cout << "------------------------------------------------------------\n";
+    const std::string vienDoi(60, '=');
+    const std::string vienDon(60, '-');
+    Console::setColor(Console::Color::Yellow);
+    std::cout << '\n' << vienDoi << '\n';
+    Console::setColor(Console::Color::Cyan);
+    std::cout << "                   XAC NHAN GIO HANG\n";
+    Console::setColor(Console::Color::Yellow);
+    std::cout << vienDon << '\n';
+    Console::setColor(Console::Color::Cyan);
+    std::cout << std::left
+              << std::setw(12) << " Ma hang"
+              << std::setw(12) << "So luong"
+              << std::setw(18) << "Don gia (VND)"
+              << std::setw(18) << "Thanh tien (VND)" << '\n';
+    Console::setColor(Console::Color::Yellow);
+    std::cout << vienDon << '\n';
+    Console::setColor(Console::Color::Default);
+
     for (std::size_t i = 0; i < dsGioHang.size(); ++i)
     {
-        std::cout << std::left << std::setw(12) << dsGioHang[i].maHang
-             << std::setw(12) << dsGioHang[i].soLuong
-             << std::setw(18) << std::fixed << std::setprecision(0) << dsGioHang[i].donGia
-             << std::setw(18) << std::fixed << std::setprecision(0)
-             << dsGioHang[i].donGia * dsGioHang[i].soLuong << '\n';
+        std::cout << " " << std::left
+                  << std::setw(11) << dsGioHang[i].maHang
+                  << std::setw(12) << dsGioHang[i].soLuong
+                  << std::setw(18) << std::fixed << std::setprecision(0) << dsGioHang[i].donGia
+                  << std::setw(18) << std::fixed << std::setprecision(0)
+                  << dsGioHang[i].donGia * dsGioHang[i].soLuong << '\n';
     }
+    Console::setColor(Console::Color::Yellow);
+    std::cout << vienDon << '\n';
+    Console::setColor(Console::Color::Default);
+
     if (bApDungMaGiamGia)
     {
-        std::cout << "Ma giam gia: " << strMaGiamGiaDaApDung << '\n'
-             << "Tien duoc giam: " << std::fixed << std::setprecision(0) << dSoTienGiam << " VND\n";
+        Console::setColor(Console::Color::Cyan);
+        std::cout << " Ma giam gia    : " << strMaGiamGiaDaApDung << '\n'
+                  << " Tien duoc giam : -" << std::fixed << std::setprecision(0) << dSoTienGiam << " VND\n";
     }
-    std::cout << "Tong thanh toan: " << std::fixed << std::setprecision(0) << dTongTien << " VND\n";
+    Console::setColor(Console::Color::Green);
+    std::cout << " TONG THANH TOAN: " << std::fixed << std::setprecision(0) << dTongTien << " VND\n";
+    Console::setColor(Console::Color::Yellow);
+    std::cout << vienDoi << "\n\n";
+    Console::setColor(Console::Color::Default);
 
     std::string strTenKhachHang = "";
     std::string strDiaChi = "";
@@ -1146,9 +1198,8 @@ void OrderManager::datHang(const std::string& strTaiKhoan)
         return;
     }
 
-    // Lay moc thoi gian ngay tai thoi diem xac nhan dat don
     const std::string strThoiGianDat = layNgayHienTai();
-    std::cout << "Thoi gian dat don: " << dinhDangThoiGianHienThi(strThoiGianDat) << '\n';
+    Console::info("Thoi gian dat don: " + dinhDangThoiGianHienThi(strThoiGianDat));
     bool bDaHuy = false;
     if (!Console::yesNo("Xac nhan tao don hang?", bDaHuy))
     {
@@ -1158,7 +1209,7 @@ void OrderManager::datHang(const std::string& strTaiKhoan)
 
     if (!truongBatBuocHopLe(strTaiKhoan) || !ngayHopLe(strThoiGianDat))
     {
-        std::cout << "Khong the tao don hang do thong tin tai khoan hoac thoi gian dat khong hop le.\n";
+        Console::error("Khong the tao don hang do thong tin tai khoan hoac thoi gian dat khong hop le.");
         return;
     }
 
@@ -1178,7 +1229,7 @@ void OrderManager::datHang(const std::string& strTaiKhoan)
     std::string strLyDoTruKho = "";
     if (!thayDoiTonKhoTheoDon(donHangMoi, true, strLyDoTruKho))
     {
-        std::cout << "Khong the giu ton kho cho don hang: " << strLyDoTruKho << "\n";
+        Console::error("Khong the giu ton kho cho don hang: " + strLyDoTruKho);
         return;
     }
 
@@ -1190,7 +1241,7 @@ void OrderManager::datHang(const std::string& strTaiKhoan)
         {
             _dsDonHang.pop_back();
             _dsHangHoa.swap(danhSachKhoTruoc);
-            std::cout << "Khong the cap nhat so luong ma giam gia; don hang chua duoc tao.\n";
+            Console::error("Khong the cap nhat so luong ma giam gia; don hang chua duoc tao.");
             return;
         }
         if (!_dsMaGiamGia.ghiFile())
@@ -1199,7 +1250,7 @@ void OrderManager::datHang(const std::string& strTaiKhoan)
                 strMaGiamGiaDaApDung, iSoLuongMaGiamGiaCu);
             _dsDonHang.pop_back();
             _dsHangHoa.swap(danhSachKhoTruoc);
-            std::cout << "Khong the luu so luong ma giam gia; don hang chua duoc tao.\n";
+            Console::error("Khong the luu so luong ma giam gia; don hang chua duoc tao.");
             return;
         }
     }
@@ -1215,8 +1266,7 @@ void OrderManager::datHang(const std::string& strTaiKhoan)
                                                      iSoLuongMaGiamGiaCu);
             _dsMaGiamGia.ghiFile();
         }
-        std::cout << "Khong the luu ton kho; don hang chua duoc tao. "
-                  << strLoiLuuTonKho << "\n";
+        Console::error("Khong the luu ton kho; don hang chua duoc tao. " + strLoiLuuTonKho);
         return;
     }
 
@@ -1239,17 +1289,18 @@ void OrderManager::datHang(const std::string& strTaiKhoan)
                 std::cerr << "[-] Khong luu duoc so luong ma giam gia sau khi huy tao don.\n";
             }
         }
-        std::cout << "Khong the luu don hang. Don hang chua duoc tao; ton kho da duoc khoi phuc neu ghi file thanh cong.\n";
+        Console::error("Khong the luu don hang. Don hang chua duoc tao; ton kho da duoc khoi phuc neu ghi file thanh cong.");
         return;
     }
 
     _qDonChoXuLy.push(donHangMoi);
     ++_iMaDonTiepTheo;
     _strMaGiamGiaChoDonTiepTheo = "";
-    std::cout << "\nDat hang thanh cong! Ma don hang cua ban: "
-         << donHangMoi.maDonHang
-         << " (luc " << dinhDangThoiGianHienThi(donHangMoi.ngayDat) << ")\n"
-         << "Ton kho da tru ngay khi dat hang. Don hang da duoc them vao hang doi cho xu ly.\n";
+    std::cout << '\n';
+    Console::success("Dat hang thanh cong! Ma don hang cua ban: #" +
+                     std::to_string(donHangMoi.maDonHang) +
+                     " (luc " + dinhDangThoiGianHienThi(donHangMoi.ngayDat) + ")");
+    Console::info("Ton kho da tru ngay khi dat hang. Don hang da duoc them vao hang doi cho xu ly.");
 }
 
 void OrderManager::menuApMaGiamGia()
@@ -1260,8 +1311,8 @@ void OrderManager::menuApMaGiamGia()
     }
     else
     {
-        std::cout << "Ma dang chon: " << _strMaGiamGiaChoDonTiepTheo << '\n'
-             << "Nhap ma khac de thay doi, 0 de bo ma: ";
+        Console::info("Ma giam gia dang chon: " + _strMaGiamGiaChoDonTiepTheo);
+        std::cout << "Nhap ma khac de thay doi, 0 de bo ma: ";
     }
 
     std::string strMaGG = "";
@@ -1273,36 +1324,37 @@ void OrderManager::menuApMaGiamGia()
     if (strMaGG == "0")
     {
         _strMaGiamGiaChoDonTiepTheo = "";
-        std::cout << "Da bo ma giam gia cho don tiep theo.\n";
+        Console::warning("Da bo ma giam gia cho don tiep theo.");
         return;
     }
     if (strMaGG.empty())
     {
-        std::cout << "Khong thay doi ma giam gia.\n";
+        Console::info("Khong thay doi ma giam gia.");
         return;
     }
 
     MaGiamGia maGiamGia;
     if (!_dsMaGiamGia.layMaGiamGiaTheoMa(strMaGG, maGiamGia))
     {
-        std::cout << "Ma giam gia khong ton tai.\n";
+        Console::error("Ma giam gia khong ton tai.");
         return;
     }
     if (maGiamGia.getSoLuongConLai() <= 0)
     {
-        std::cout << "Ma giam gia da het luot su dung.\n";
+        Console::warning("Ma giam gia da het luot su dung.");
         return;
     }
 
     _strMaGiamGiaChoDonTiepTheo = strMaGG;
-    std::cout << "Da chon ma giam gia " << strMaGG
-         << ". Ma se duoc ap dung neu don co san pham "
-         << maGiamGia.getMaHang() << ".\n";
+    Console::success("Da chon ma giam gia " + strMaGG +
+                     ". Ma se duoc ap dung neu don co san pham " +
+                     maGiamGia.getMaHang() + ".");
 }
 
 bool OrderManager::hienThiDonHangCuaTaiKhoan(const std::string& strTaiKhoan, const bool bChiDonChoXuLy) const
 {
     bool bCoDon = false;
+    int iSoDon = 0;
     for (std::size_t i = 0; i < _dsDonHang.size(); ++i)
     {
         const DonHang& donHang = _dsDonHang[i];
@@ -1311,21 +1363,27 @@ bool OrderManager::hienThiDonHangCuaTaiKhoan(const std::string& strTaiKhoan, con
         {
             if (!bCoDon)
             {
-                std::cout << (bChiDonChoXuLy
-                    ? "\n=== DON HANG DANG CHO XU LY CUA BAN ===\n"
-                    : "\n=== LICH SU DON HANG CUA BAN ===\n");
+                Console::info(bChiDonChoXuLy
+                    ? "Danh sach don hang dang cho xu ly cua ban:"
+                    : "Lich su don hang cua ban:");
                 bCoDon = true;
             }
             inThongTinDonHang(donHang);
-            std::cout << "------------------------------------------------------------\n";
+            ++iSoDon;
         }
     }
 
     if (!bCoDon)
     {
-        std::cout << (bChiDonChoXuLy
-            ? "\nBan khong co don hang nao dang cho xu ly de huy.\n"
-            : "\nBan chua co don hang nao.\n");
+        Console::info(bChiDonChoXuLy
+            ? "Ban khong co don hang nao dang cho xu ly de huy."
+            : "Ban chua co don hang nao.");
+    }
+    else
+    {
+        Console::setColor(Console::Color::Cyan);
+        std::cout << "\nTong cong: " << iSoDon << " don hang.\n";
+        Console::setColor(Console::Color::Default);
     }
     return bCoDon;
 }
@@ -1344,7 +1402,7 @@ void OrderManager::huyDonHangKhachHang(const std::string& strTaiKhoan)
     }
     if (iMaDon == 0)
     {
-        std::cout << "Da quay lai menu.\n";
+        Console::warning("Da quay lai menu.");
         return;
     }
 
@@ -1355,7 +1413,7 @@ void OrderManager::huyDonHangAdmin()
 {
     if (_qDonChoXuLy.empty())
     {
-        std::cout << "\nHien khong co don hang nao dang cho xu ly.\n";
+        Console::info("Hien khong co don hang nao dang cho xu ly.");
         return;
     }
 
@@ -1368,7 +1426,7 @@ void OrderManager::huyDonHangAdmin()
     }
     if (iMaDon == 0)
     {
-        std::cout << "Da quay lai menu.\n";
+        Console::warning("Da quay lai menu.");
         return;
     }
 
@@ -1379,34 +1437,40 @@ void OrderManager::hienThiHangCho() const
 {
     if (_qDonChoXuLy.empty())
     {
-        std::cout << "\nHien khong co don hang nao dang cho xu ly.\n";
+        Console::info("Hien khong co don hang nao dang cho xu ly.");
         return;
     }
 
-    std::cout << "\n=== HANG DOI DON HANG (FIFO) ===\n";
+    Console::info("Danh sach don hang dang cho xu ly (theo thu tu FIFO):");
     Queue<DonHang> qTam = _qDonChoXuLy;
+    int iSoDon = 0;
     while (!qTam.empty())
     {
         inThongTinDonHang(qTam.front());
-        std::cout << "------------------------------------------------------------\n";
+        ++iSoDon;
         qTam.pop();
     }
+    Console::setColor(Console::Color::Cyan);
+    std::cout << "\nTong cong: " << iSoDon << " don hang dang cho.\n";
+    Console::setColor(Console::Color::Default);
 }
 
 void OrderManager::hienThiTatCaDonHang() const
 {
     if (_dsDonHang.empty())
     {
-        std::cout << "Danh sach don hang rong.\n";
+        Console::info("Danh sach don hang rong.");
         return;
     }
 
-    std::cout << "\n=== TOAN BO DON HANG ===\n";
+    Console::info("Toan bo don hang trong he thong:");
     for (std::size_t i = 0; i < _dsDonHang.size(); ++i)
     {
         inThongTinDonHang(_dsDonHang[i]);
-        std::cout << "------------------------------------------------------------\n";
     }
+    Console::setColor(Console::Color::Cyan);
+    std::cout << "\nTong cong: " << _dsDonHang.size() << " don hang.\n";
+    Console::setColor(Console::Color::Default);
 }
 
 void OrderManager::xuLyDonTiepTheo()
@@ -1414,25 +1478,23 @@ void OrderManager::xuLyDonTiepTheo()
     const int iViTri = timDonChoXuLyDauTien();
     if (iViTri < 0)
     {
-        std::cout << "Khong co don hang dang cho xu ly.\n";
+        Console::info("Khong co don hang dang cho xu ly.");
         return;
     }
 
     DonHang& donHang = _dsDonHang[static_cast<std::size_t>(iViTri)];
-    std::cout << "\nDon hang tiep theo trong hang doi FIFO la don #"
-         << donHang.maDonHang << ".\n";
+    Console::info("Don hang tiep theo trong hang doi FIFO la don #" +
+                  std::to_string(donHang.maDonHang) + ":");
     inThongTinDonHang(donHang);
 
-    // Neu day la don cu chua the giu kho luc khoi dong (vi ton kho khi do khong du),
-    // thu giu lai truoc khi xu ly. Neu chua du hang thi don van nam dau hang doi.
     if (!donHang.tonKhoDaTru)
     {
         DanhSachHangHoa danhSachKhoTruoc = _dsHangHoa;
         std::string strLyDoGiuKho = "";
         if (!thayDoiTonKhoTheoDon(donHang, true, strLyDoGiuKho))
         {
-            std::cout << "\n[-] Khong the xu ly Khong the giu ton kho cho don #"
-                      << donHang.maDonHang << ": " << strLyDoGiuKho << "\n";
+            Console::error("Khong the giu ton kho cho don #" +
+                           std::to_string(donHang.maDonHang) + ": " + strLyDoGiuKho);
             return;
         }
 
@@ -1442,7 +1504,7 @@ void OrderManager::xuLyDonTiepTheo()
         {
             _dsHangHoa.swap(danhSachKhoTruoc);
             donHang.tonKhoDaTru = false;
-            std::cout << "Khong the luu ton kho khi giu hang cho don: " << strLoiLuuKho << "\n";
+            Console::error("Khong the luu ton kho khi giu hang cho don: " + strLoiLuuKho);
             return;
         }
         if (!ghiFile())
@@ -1455,7 +1517,7 @@ void OrderManager::xuLyDonTiepTheo()
                 std::cerr << "[!] Khong the khoi phuc ton kho sau khi ghi don that bai: "
                           << strLoiKhoiPhuc << "\n";
             }
-            std::cout << "Khong the luu trang thai giu kho cho don. Don van cho xu ly.\n";
+            Console::error("Khong the luu trang thai giu kho cho don. Don van cho xu ly.");
             return;
         }
     }
@@ -1463,33 +1525,31 @@ void OrderManager::xuLyDonTiepTheo()
     std::string strLyDo = "";
     if (!kiemTraDuHang(donHang, strLyDo))
     {
-        std::cout << "\n[-] Khong the xu ly " << strLyDo << '\n'
-             << "Don #" << donHang.maDonHang
-             << " van duoc giu o dau hang doi. He thong khong xu ly don phia sau\n"
-             << "de dam bao dung thu tu dat truoc (FIFO).\n";
+        Console::error("Khong the xu ly: " + strLyDo);
+        Console::warning("Don #" + std::to_string(donHang.maDonHang) +
+                         " van duoc giu o dau hang doi de dam bao dung thu tu dat truoc (FIFO).");
         return;
     }
 
     bool bDaHuy = false;
     if (!Console::yesNo("Xac nhan xu ly don #" + std::to_string(donHang.maDonHang) + "?", bDaHuy))
     {
-        std::cout << "Da huy thao tac. Don hang van dang cho xu ly.\n";
+        Console::warning("Da huy thao tac. Don hang van dang cho xu ly.");
         return;
     }
 
-    // Moi don moi/legacy da duoc tru (giu) kho truoc khi xu ly.
-    // Buoc xu ly chi doi trang thai, khong tiep tuc tru so luong lan nua.
     donHang.trangThai = TRANG_THAI_DA_XU_LY;
     if (!ghiFile())
     {
         donHang.trangThai = TRANG_THAI_CHO_XU_LY;
-        std::cout << "Khong the luu trang thai don hang. Don van o dau hang doi; ton kho duoc giu nguyen.\n";
+        Console::error("Khong the luu trang thai don hang. Don van o dau hang doi; ton kho duoc giu nguyen.");
         return;
     }
 
     _qDonChoXuLy.pop();
-    std::cout << "\n[+] Da xu ly don hang #" << donHang.maDonHang
-         << ". Ton kho da duoc tru tu luc dat hang, khong tru them lan nua. Don da duoc lay khoi Queue FIFO.\n";
+    std::cout << '\n';
+    Console::success("Da xu ly don hang #" + std::to_string(donHang.maDonHang) +
+                     ". Don da duoc lay khoi Queue FIFO.");
 }
 
 bool OrderManager::coDonChoTheoMaHang(const std::string& strMaHang) const
@@ -1515,16 +1575,15 @@ void OrderManager::menuQuanLyDonHang()
 {
     while (true)
     {
-        std::cout << "\n==============================================\n"
-             << "             QUAN LY DON HANG                 \n"
-             << "==============================================\n"
-             << "1. Xem danh sach don hang dang cho (FIFO)\n"
-             << "2. Xu ly don hang tiep theo\n"
-             << "3. Xem tat ca don hang\n"
-             << "4. Huy don hang dang cho\n"
-             << "0. Quay lai menu chinh\n"
-             << "----------------------------------------------\n"
-             << "Nhap lua chon: ";
+        Console::clear();
+        Console::title("QUAN LY DON HANG", Console::Color::Magenta);
+        Console::menu({
+            "Xem danh sach don hang dang cho (FIFO)",
+            "Xu ly don hang tiep theo",
+            "Xem tat ca don hang",
+            "Huy don hang dang cho"
+        }, "Quay lai menu chinh");
+        std::cout << "Nhap lua chon cua ban: ";
 
         std::string strLuaChon = "";
         if (!std::getline(std::cin, strLuaChon))
@@ -1539,27 +1598,37 @@ void OrderManager::menuQuanLyDonHang()
         }
         else if (strLuaChon == "1")
         {
+            Console::clear();
+            Console::title("HANG DOI DON HANG CHO XU LY (FIFO)", Console::Color::Cyan);
             hienThiHangCho();
             Console::pause();
         }
         else if (strLuaChon == "2")
         {
+            Console::clear();
+            Console::title("XU LY DON HANG TIEP THEO", Console::Color::Green);
             xuLyDonTiepTheo();
             Console::pause();
         }
         else if (strLuaChon == "3")
         {
+            Console::clear();
+            Console::title("TOAN BO DON HANG TRONG HE THONG", Console::Color::Cyan);
             hienThiTatCaDonHang();
             Console::pause();
         }
         else if (strLuaChon == "4")
         {
+            Console::clear();
+            Console::title("HUY DON HANG DANG CHO", Console::Color::Red);
             huyDonHangAdmin();
             Console::pause();
         }
         else
         {
-            std::cout << "Lua chon khong hop le. Vui long chon lai.\n";
+            std::cout << '\n';
+            Console::error("Lua chon khong hop le. Vui long chon lai.");
+            Console::pause();
         }
     }
 }

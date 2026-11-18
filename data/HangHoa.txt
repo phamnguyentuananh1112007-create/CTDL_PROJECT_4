@@ -1,7 +1,7 @@
 AO01|Badminton Shirt|Vietnam|White|120000|01/10/2026|29
 QN01|Badminton Shorts|Vietnam|Blue|100000|02/10/2026|30
 GI01|Sports Shoes|China|Black|450000|03/10/2026|5
-LN01|Li-Ning Axforce 80|China|Black|4200000|01/09/2026|8
+LN01|Li-Ning Axforce 80|China|Black|4200000|01/09/2026|4
 LN02|Li-Ning Axforce 100|China|Red|4800000|02/09/2026|5
 LN03|Li-Ning Axforce 75|China|Blue|3500000|03/09/2026|12
 LN04|Li-Ning Axforce 90|China|Black Red|4500000|04/09/2026|7
@@ -9,7 +9,7 @@ LN05|Li-Ning Axforce 65|China|White|2800000|05/09/2026|15
 LN06|Li-Ning Axforce 50|China|Blue Black|2500000|06/09/2026|11
 LN07|Li-Ning Halbertec 8000|China|Black|4200000|07/09/2026|9
 LN08|Li-Ning Halbertec 9000|China|Blue|4500000|08/09/2026|6
-LN09|Li-Ning Halbertec 8000|China|Red|4200000|09/09/2026|7
+LN09|Li-Ning Halbertec 8000|China|Red|4200000|09/09/2026|8
 LN10|Li-Ning Halbertec 9000|China|White|4500000|10/09/2026|7
 LN11|Li-Ning Halbertec 2000|China|Black Red|3000000|11/09/2026|11
 LN12|Li-Ning Halbertec 1000|China|Blue|2800000|12/09/2026|10
