@@ -92,4 +92,3 @@ VT28|Victor Arrow Power|Taiwan|Red|2300000|28/11/2026|14
 VT29|Victor Arrow 9000|Taiwan|White|2100000|29/11/2026|12
 VT30|Victor Arrow 8000|Taiwan|Blue|1900000|30/11/2026|16
 AAAA|a|taiwan|do|120000|18/11/2026|0
-AAA1|a|taiwan|do|120000|18/11/2026|0
