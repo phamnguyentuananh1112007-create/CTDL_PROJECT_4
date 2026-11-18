@@ -513,7 +513,8 @@ public:
 
     void dangKyTaiKhoan(const string& strAdminUser)
     {
-        hienThiHeaderHeThong("DANG KY TAI KHOAN", "", ROLE_GUEST, Console::Color::Yellow);
+        COORD toaDoDongHo = hienThiHeaderHeThong("DANG KY TAI KHOAN", "", ROLE_GUEST, Console::Color::Yellow);
+        DongHoThoiGianThuc dongHo(toaDoDongHo);
 
         string strUser = "";
         string strPassword = "";
@@ -622,7 +623,8 @@ int dangNhapHeThong(const Admin& adminAcc, const QuanLyKhachHang& qlKhachHang, s
     int iLanThu = 0;
     while (iLanThu < MAX_LOGIN_ATTEMPTS)
     {
-        hienThiHeaderHeThong("DANG NHAP HE THONG", "", ROLE_GUEST, Console::Color::Cyan);
+        COORD toaDoDongHo = hienThiHeaderHeThong("DANG NHAP HE THONG", "", ROLE_GUEST, Console::Color::Cyan);
+        DongHoThoiGianThuc dongHo(toaDoDongHo);
 
         cout << "(Nhan ESC tai User hoac Password de quay lai)\n\n";
         string strUser = "";
@@ -959,85 +961,175 @@ void menuChinh(
                     Console::pause();
                     break;
                 case 7:
+                {
                     hienThiHeaderHeThong("THEM HANG HOA MOI", strCurrentUsername, iRole, Console::Color::Green);
+                    DanhSachHangHoa dsHangHoaTruoc = dsHangHoa;
+                    if (giaoDienHangHoa.themHangHoa(dsHangHoa))
                     {
-                        DanhSachHangHoa dsHangHoaTruoc = dsHangHoa;
-                        if (giaoDienHangHoa.themHangHoa(dsHangHoa))
-                        {
-                            luuHangHoaHoacKhoiPhuc(dsHangHoa, dsHangHoaTruoc, repositoryHangHoa);
-                        }
+                        luuHangHoaHoacKhoiPhuc(dsHangHoa, dsHangHoaTruoc, repositoryHangHoa);
                     }
                     Console::pause();
                     break;
+                }
                 case 8:
+                {
                     hienThiHeaderHeThong("CAP NHAT SO LUONG HANG HOA", strCurrentUsername, iRole, Console::Color::Yellow);
+                    DanhSachHangHoa dsHangHoaTruoc = dsHangHoa;
+                    if (giaoDienHangHoa.capNhatSoLuong(dsHangHoa))
                     {
-                        DanhSachHangHoa dsHangHoaTruoc = dsHangHoa;
-                        if (giaoDienHangHoa.capNhatSoLuong(dsHangHoa))
-                        {
-                            luuHangHoaHoacKhoiPhuc(dsHangHoa, dsHangHoaTruoc, repositoryHangHoa);
-                        }
+                        luuHangHoaHoacKhoiPhuc(dsHangHoa, dsHangHoaTruoc, repositoryHangHoa);
                     }
                     Console::pause();
                     break;
+                }
                 case 9:
+                {
                     hienThiHeaderHeThong("XOA HANG HOA", strCurrentUsername, iRole, Console::Color::Red);
+                    DanhSachHangHoa dsHangHoaTruoc = dsHangHoa;
+                    if (giaoDienHangHoa.xoaHangHoa(
+                            dsHangHoa,
+                            [&orderManager](const string& strMaHang)
+                            {
+                                return orderManager.coDonChoTheoMaHang(strMaHang);
+                            }))
                     {
-                        DanhSachHangHoa dsHangHoaTruoc = dsHangHoa;
-                        if (giaoDienHangHoa.xoaHangHoa(
-                                dsHangHoa,
-                                [&orderManager](const string& strMaHang)
-                                {
-                                    return orderManager.coDonChoTheoMaHang(strMaHang);
-                                }))
-                        {
-                            luuHangHoaHoacKhoiPhuc(dsHangHoa, dsHangHoaTruoc, repositoryHangHoa);
-                        }
+                        luuHangHoaHoacKhoiPhuc(dsHangHoa, dsHangHoaTruoc, repositoryHangHoa);
                     }
                     Console::pause();
                     break;
+                }
                 case 10:
-                    hienThiHeaderHeThong("QUAN LY DON HANG", strCurrentUsername, iRole, Console::Color::Magenta);
-                    orderManager.menuQuanLyDonHang();
+                {
+                    int iChonDonHang = -1;
+                    while (true)
+                    {
+                        COORD tdMenu = hienThiHeaderHeThong(
+                            "QUAN LY DON HANG",
+                            strCurrentUsername,
+                            iRole,
+                            Console::Color::Magenta
+                        );
+
+                        hienThiBangMenu({
+                            "Xem danh sach don hang dang cho (FIFO)",
+                            "Xu ly don hang tiep theo",
+                            "Xem tat ca don hang",
+                            "Huy don hang dang cho"
+                        }, "Quay lai menu chinh");
+
+                        bool nhapDonThanhCong = false;
+                        {
+                            DongHoThoiGianThuc dhMenu(tdMenu);
+                            nhapDonThanhCong = nhapLuaChon(iChonDonHang);
+                        }
+
+                        if (!nhapDonThanhCong)
+                        {
+                            if (cin.eof())
+                            {
+                                return;
+                            }
+                            cout << "\n";
+                            Console::error("Lua chon khong hop le!");
+                            Console::pause();
+                            continue;
+                        }
+
+                        if (iChonDonHang == 0)
+                        {
+                            break;
+                        }
+                        else if (iChonDonHang == 1)
+                        {
+                            hienThiHeaderHeThong(
+                                "HANG DOI DON HANG CHO XU LY (FIFO)",
+                                strCurrentUsername,
+                                iRole,
+                                Console::Color::Cyan
+                            );
+                            orderManager.hienThiHangCho();
+                            Console::pause();
+                        }
+                        else if (iChonDonHang == 2)
+                        {
+                            hienThiHeaderHeThong(
+                                "XU LY DON HANG TIEP THEO",
+                                strCurrentUsername,
+                                iRole,
+                                Console::Color::Green
+                            );
+                            orderManager.xuLyDonTiepTheo();
+                            Console::pause();
+                        }
+                        else if (iChonDonHang == 3)
+                        {
+                            hienThiHeaderHeThong(
+                                "TOAN BO DON HANG TRONG HE THONG",
+                                strCurrentUsername,
+                                iRole,
+                                Console::Color::Cyan
+                            );
+                            orderManager.hienThiTatCaDonHang();
+                            Console::pause();
+                        }
+                        else if (iChonDonHang == 4)
+                        {
+                            hienThiHeaderHeThong(
+                                "HUY DON HANG DANG CHO",
+                                strCurrentUsername,
+                                iRole,
+                                Console::Color::Red
+                            );
+                            orderManager.huyDonHangAdmin();
+                            Console::pause();
+                        }
+                        else
+                        {
+                            cout << "\n";
+                            Console::error("Lua chon khong hop le!");
+                            Console::pause();
+                        }
+                    }
                     break;
+                }
                 case 11:
                     hienThiHeaderHeThong("DANH SACH MA GIAM GIA", strCurrentUsername, iRole, Console::Color::Cyan);
                     dsMaGiamGia.hienThi();
                     Console::pause();
                     break;
                 case 12:
+                {
                     hienThiHeaderHeThong("THEM MA GIAM GIA MOI", strCurrentUsername, iRole, Console::Color::Green);
+                    const DanhSachMaGiamGia dsMaGiamGiaTruoc = dsMaGiamGia;
+                    if (dsMaGiamGia.themMaGiamGia(dsHangHoa))
                     {
-                        const DanhSachMaGiamGia dsMaGiamGiaTruoc = dsMaGiamGia;
-                        if (dsMaGiamGia.themMaGiamGia(dsHangHoa))
-                        {
-                            luuMaGiamGiaHoacKhoiPhuc(dsMaGiamGia, dsMaGiamGiaTruoc);
-                        }
+                        luuMaGiamGiaHoacKhoiPhuc(dsMaGiamGia, dsMaGiamGiaTruoc);
                     }
                     Console::pause();
                     break;
+                }
                 case 13:
+                {
                     hienThiHeaderHeThong("CAP NHAT SO LUONG MA GIAM GIA", strCurrentUsername, iRole, Console::Color::Yellow);
+                    const DanhSachMaGiamGia dsMaGiamGiaTruoc = dsMaGiamGia;
+                    if (dsMaGiamGia.capNhatSoLuong())
                     {
-                        const DanhSachMaGiamGia dsMaGiamGiaTruoc = dsMaGiamGia;
-                        if (dsMaGiamGia.capNhatSoLuong())
-                        {
-                            luuMaGiamGiaHoacKhoiPhuc(dsMaGiamGia, dsMaGiamGiaTruoc);
-                        }
+                        luuMaGiamGiaHoacKhoiPhuc(dsMaGiamGia, dsMaGiamGiaTruoc);
                     }
                     Console::pause();
                     break;
+                }
                 case 14:
+                {
                     hienThiHeaderHeThong("XOA MA GIAM GIA", strCurrentUsername, iRole, Console::Color::Red);
+                    const DanhSachMaGiamGia dsMaGiamGiaTruoc = dsMaGiamGia;
+                    if (dsMaGiamGia.xoaMaGiamGia())
                     {
-                        const DanhSachMaGiamGia dsMaGiamGiaTruoc = dsMaGiamGia;
-                        if (dsMaGiamGia.xoaMaGiamGia())
-                        {
-                            luuMaGiamGiaHoacKhoiPhuc(dsMaGiamGia, dsMaGiamGiaTruoc);
-                        }
+                        luuMaGiamGiaHoacKhoiPhuc(dsMaGiamGia, dsMaGiamGiaTruoc);
                     }
                     Console::pause();
                     break;
+                }
                 case 15:
                     hienThiHeaderHeThong("DANH SACH TAI KHOAN KHACH HANG", strCurrentUsername, iRole, Console::Color::Cyan);
                     qlKhachHang.hienThiDanhSach();
