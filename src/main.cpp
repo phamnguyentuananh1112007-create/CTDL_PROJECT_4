@@ -10,13 +10,13 @@
 #include <stdexcept>
 #include <ctime>
 
-#include "HangHoa.h"
-#include "DanhSachHangHoa.h"
-#include "HangHoaConsole.h"
-#include "HangHoaRepository.h"
-#include "MaGiamGia.h"
-#include "DanhSachMaGiamGia.h"
-#include "OrderManager.h"
+#include "..\include\HangHoa.h"
+#include "..\include\DanhSachHangHoa.h"
+#include "..\include\HangHoaConsole.h"
+#include "..\include\HangHoaRepository.h"
+#include "..\include\MaGiamGia.h"
+#include "..\include\DanhSachMaGiamGia.h"
+#include "..\include\OrderManager.h"
 
 using namespace std;
 
