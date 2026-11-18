@@ -10,6 +10,8 @@
 #include <stdexcept>
 #include <ctime>
 #include <filesystem>
+#include "Console.h"
+#include "Application.h"
 
 #include "..\include\HangHoa.h"
 #include "..\include\DanhSachHangHoa.h"
@@ -116,85 +118,16 @@ void diChuyenConTro(COORD coord)
  * @Description Doc lua chon so nguyen tu ban phim dong thoi cap nhat
  *              dong ho thoi gian thuc moi giay ma khong nhap nhay man hinh
  *****************************************************************************/
-bool nhapLuaChonVoiDongHo(int& iChon, COORD posDongHo)
+bool nhapLuaChon(int& iChon)
 {
-    string strNhap = "";
-    string strThoiGianCu = "";
-    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-
-    CONSOLE_SCREEN_BUFFER_INFO csbi;
-    GetConsoleScreenBufferInfo(hConsole, &csbi);
-    WORD wThuocTinhMacDinh = csbi.wAttributes;
-
-    while (true)
+    if (!(cin >> iChon))
     {
-        // 1. Cap nhat dong ho neu da sang giay moi
-        string strThoiGianMoi = layThoiGianThucTe();
-        if (strThoiGianMoi != strThoiGianCu)
-        {
-            strThoiGianCu = strThoiGianMoi;
-            COORD posNhapHienTai = layToaDoConTro();
-
-            diChuyenConTro(posDongHo);
-            SetConsoleTextAttribute(hConsole, COLOR_CYAN);
-            cout << strThoiGianMoi;
-            SetConsoleTextAttribute(hConsole, wThuocTinhMacDinh);
-
-            diChuyenConTro(posNhapHienTai);
-            cout.flush();
-        }
-
-        // 2. Kiem tra nguoi dung co dang go phim hay khong
-        if (_kbhit())
-        {
-            int iChar = _getch();
-            if (iChar == KEY_ENTER)
-            {
-                cout << '\n';
-                if (strNhap.empty())
-                {
-                    return false;
-                }
-                try
-                {
-                    size_t idx = 0;
-                    int iKetQua = stoi(strNhap, &idx);
-                    if (idx != strNhap.length())
-                    {
-                        return false;
-                    }
-                    iChon = iKetQua;
-                    return true;
-                }
-                catch (...)
-                {
-                    return false;
-                }
-            }
-            else if (iChar == KEY_BACKSPACE)
-            {
-                if (!strNhap.empty())
-                {
-                    strNhap.pop_back();
-                    cout << "\b \b";
-                    cout.flush();
-                }
-            }
-            else if (iChar == 0 || iChar == KEY_ARROW_PREFIX)
-            {
-                _getch(); // Bo qua phim mui ten / phim chuc nang
-            }
-            else if (iChar >= KEY_SPACE && iChar <= KEY_TILDE)
-            {
-                strNhap.push_back(static_cast<char>(iChar));
-                cout << static_cast<char>(iChar);
-                cout.flush();
-            }
-        }
-
-        // Giam tai CPU nhung van phan hoi phim bam tuc thi
-        Sleep(50);
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        return false;
     }
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    return true;
 }
 
 /******************************************************************************
@@ -398,7 +331,7 @@ public:
                 !QuanLyKhachHang::matKhauHopLe(taiKhoan.Password) ||
                 this->kiemTraTonTai(taiKhoan.User))
             {
-                cerr << "[Canh bao] Bo qua tai khoan khong hop le tai dong "
+                cerr << "[!] Bo qua tai khoan khong hop le tai dong "
                      << iDong << " trong " << this->_strFilename << ".\n";
                 continue;
             }
@@ -406,7 +339,7 @@ public:
         }
         if (fileIn.bad())
         {
-            cerr << "[Loi] Xay ra loi khi doc tep " << this->_strFilename << ".\n";
+            cerr << "[-] Xay ra loi khi doc tep " << this->_strFilename << ".\n";
         }
         fileIn.close();
     }
@@ -467,7 +400,7 @@ public:
 
     void dangKyTaiKhoan(const string& strAdminUser)
     {
-        system("cls");
+        Console::clear();
         setColor(COLOR_YELLOW);
         cout << "========================================\n";
         cout << "           DANG KY TAI KHOAN            \n";
@@ -492,7 +425,7 @@ public:
             cout << "\n[-] Ten tai khoan khong hop le hoac da ton tai. "
                  << "Chi dung chu cai, chu so, '_' va '-', toi da 32 ky tu.\n";
             setColor(COLOR_DEFAULT);
-            system("pause");
+            Console::pause();
             return;
         }
 
@@ -502,7 +435,7 @@ public:
             setColor(COLOR_YELLOW);
             cout << "\n[!] Huy thao tac dang ky.\n";
             setColor(COLOR_DEFAULT);
-            system("pause");
+            Console::pause();
             return;
         }
 
@@ -512,7 +445,7 @@ public:
             setColor(COLOR_YELLOW);
             cout << "\n[!] Huy thao tac dang ky.\n";
             setColor(COLOR_DEFAULT);
-            system("pause");
+            Console::pause();
             return;
         }
 
@@ -521,7 +454,7 @@ public:
             setColor(COLOR_RED);
             cout << "\n[-] Mat khau phai co 1-128 ky tu va khong chua khoang trang hoac '|'.\n";
             setColor(COLOR_DEFAULT);
-            system("pause");
+            Console::pause();
             return;
         }
 
@@ -530,7 +463,7 @@ public:
             setColor(COLOR_RED);
             cout << "\n[-] Mat khau xac nhan khong khop!\n";
             setColor(COLOR_DEFAULT);
-            system("pause");
+            Console::pause();
             return;
         }
 
@@ -543,14 +476,14 @@ public:
             setColor(COLOR_RED);
             cout << "\n[-] Khong luu duoc tai khoan: " << strLoi << "\n";
             setColor(COLOR_DEFAULT);
-            system("pause");
+            Console::pause();
             return;
         }
 
         setColor(COLOR_GREEN);
         cout << "\n[+] Dang ky thanh cong! Ban da co the dang nhap ngay.\n";
         setColor(COLOR_DEFAULT);
-        system("pause");
+        Console::pause();
     }
 
     bool kiemTraDangNhap(const string& strUser, const string& strPassword) const
@@ -590,7 +523,7 @@ int dangNhapHeThong(const Admin& adminAcc, const QuanLyKhachHang& qlKhachHang, s
     int iLanThu = 0;
     while (iLanThu < MAX_LOGIN_ATTEMPTS)
     {
-        system("cls");
+        Console::clear();
 
         setColor(COLOR_CYAN);
         cout << "****************************************\n";
@@ -616,7 +549,7 @@ int dangNhapHeThong(const Admin& adminAcc, const QuanLyKhachHang& qlKhachHang, s
             setColor(COLOR_YELLOW);
             cout << "\n[!] Ban da nhan ESC. Huy thao tac dang nhap.\n";
             setColor(COLOR_DEFAULT);
-            system("pause");
+            Console::pause();
             return ROLE_EXIT;
         }
 
@@ -626,7 +559,7 @@ int dangNhapHeThong(const Admin& adminAcc, const QuanLyKhachHang& qlKhachHang, s
             setColor(COLOR_GREEN);
             cout << "\n[+] Dang nhap thanh cong voi TOAN QUYEN ADMIN!\n";
             setColor(COLOR_DEFAULT);
-            system("pause");
+            Console::pause();
             return ROLE_ADMIN;
         }
         else if (qlKhachHang.kiemTraDangNhap(strUser, strPassword))
@@ -635,7 +568,7 @@ int dangNhapHeThong(const Admin& adminAcc, const QuanLyKhachHang& qlKhachHang, s
             setColor(COLOR_GREEN);
             cout << "\n[+] Dang nhap thanh cong! Chao mung KHACH HANG.\n";
             setColor(COLOR_DEFAULT);
-            system("pause");
+            Console::pause();
             return ROLE_CUSTOMER;
         }
         else
@@ -644,14 +577,14 @@ int dangNhapHeThong(const Admin& adminAcc, const QuanLyKhachHang& qlKhachHang, s
             setColor(COLOR_RED);
             cout << "\n[-] Sai tai khoan hoac mat khau! (Lan " << iLanThu << "/" << MAX_LOGIN_ATTEMPTS << ")\n";
             setColor(COLOR_DEFAULT);
-            system("pause");
+            Console::pause();
         }
     }
 
     setColor(COLOR_RED);
     cout << "\n[!] Ban da nhap sai qua " << MAX_LOGIN_ATTEMPTS << " lan. Quay lai man hinh khoi dong.\n";
     setColor(COLOR_DEFAULT);
-    system("pause");
+    Console::pause();
     return ROLE_EXIT;
 }
 
@@ -660,11 +593,8 @@ int manHinhKhoiDong(const Admin& adminAcc, QuanLyKhachHang& qlKhachHang, string&
     int iChon = -1;
     while (true)
     {
-        system("cls");
-        setColor(COLOR_CYAN);
-        cout << "========================================\n";
-        cout << "      HE THONG QUAN LY - KHOI DONG      \n";
-        cout << "========================================\n";
+        Console::clear();
+        Console::title("HE THONG QUAN LY - KHOI DONG", Console::Color::Cyan);
         setColor(COLOR_DEFAULT);
         cout << "1. Dang nhap\n";
         cout << "2. Dang ky tai khoan khach hang moi\n";
@@ -701,9 +631,9 @@ int manHinhKhoiDong(const Admin& adminAcc, QuanLyKhachHang& qlKhachHang, string&
                 return ROLE_EXIT;
             default:
                 setColor(COLOR_RED);
-                cout << "\n[Loi] Lua chon khong hop le!\n";
+                cout << "\n[-] Lua chon khong hop le!\n";
                 setColor(COLOR_DEFAULT);
-                system("pause");
+                Console::pause();
                 break;
         }
     }
@@ -719,14 +649,14 @@ bool luuHangHoaHoacKhoiPhuc(
     if (!repositoryHangHoa.ghiFile(dsHangHoa, strLoiLuu))
     {
         dsHangHoa.swap(dsHangHoaTruoc);
-        cout << "[Loi] Khong luu duoc hang hoa; du lieu trong bo nho da duoc khoi phuc. "
+        cout << "[-] Khong luu duoc hang hoa; du lieu trong bo nho da duoc khoi phuc. "
              << strLoiLuu << endl;
         return false;
     }
 
     if (!strLoiLuu.empty())
     {
-        cout << "[Canh bao] Hang hoa da duoc luu, nhung backup can duoc kiem tra: "
+        cout << "[!] Hang hoa da duoc luu, nhung backup can duoc kiem tra: "
              << strLoiLuu << endl;
     }
 
@@ -741,7 +671,7 @@ bool luuMaGiamGiaHoacKhoiPhuc(
     if (!dsMaGiamGia.ghiFile())
     {
         dsMaGiamGia = dsMaGiamGiaTruoc;
-        cout << "[Loi] Khong luu duoc ma giam gia; thay doi trong bo nho da duoc khoi phuc.\n";
+        cout << "[-] Khong luu duoc ma giam gia; thay doi trong bo nho da duoc khoi phuc.\n";
         return false;
     }
     return true;
@@ -752,14 +682,10 @@ void menuChinh(const int iRole, const string& strCurrentUsername, DanhSachHangHo
     int iChon = -1;
     do
     {
-        system("cls");
-        setColor(COLOR_YELLOW);
-        cout << "========================================================\n";
-        cout << "                 MENU CHINH HE THONG                    \n";
+        Console::clear();
+        Console::title("MENU CHINH HE THONG", Console::Color::Yellow);
         setColor(COLOR_CYAN);
-        cout << "  Xin chao: " << strCurrentUsername << "  |  ";
-        COORD posDongHo = layToaDoConTro(); // Luu lai toa do ngay vi tri bat dau in dong ho
-        cout << layThoiGianThucTe() << "\n";
+        cout << "Xin chao: " << strCurrentUsername << "  |  " << layThoiGianThucTe() << "\n";
 
         if (iRole == ROLE_ADMIN)
         {
@@ -802,28 +728,27 @@ void menuChinh(const int iRole, const string& strCurrentUsername, DanhSachHangHo
         cout << "0. Dang xuat\n";
         cout << "--------------------------------------------------------\n";
         cout << "Nhap lua chon cua ban: ";
-
-        // Vua cho nhap lua chon, vua cap nhat dong ho moi giay tai posDongHo
-        if (!nhapLuaChonVoiDongHo(iChon, posDongHo))
+        if (!nhapLuaChon(iChon))
         {
             setColor(COLOR_RED);
-            cout << "\n[Loi] Kieu du lieu khong hop le! Vui long nhap lai.\n";
+            cout << "\n[-] Kieu du lieu khong hop le! Vui long nhap lai.\n";
             setColor(COLOR_DEFAULT);
-            system("pause");
+            Console::pause();
             continue;
         }
 
         if (iRole != ROLE_ADMIN && iChon >= 7 && iChon <= 15)
         {
             setColor(COLOR_RED);
-            cout << "\n[Loi] Lua chon khong hop le!\n";
+            cout << "\n[-] Lua chon khong hop le!\n";
             setColor(COLOR_DEFAULT);
-            system("pause");
+            Console::pause();
             continue;
         }
 
         try
         {
+            Console::clear();
             switch (iChon)
             {
                 case 1:
@@ -844,9 +769,9 @@ void menuChinh(const int iRole, const string& strCurrentUsername, DanhSachHangHo
                         }
                         xoaBoDem();
                         setColor(COLOR_RED);
-                        cout << "\n[Loi] Lua chon khong hop le!\n";
+                        cout << "\n[-] Lua chon khong hop le!\n";
                         setColor(COLOR_DEFAULT);
-                        system("pause");
+                        Console::pause();
                         break;
                     }
                     cin.ignore(numeric_limits<streamsize>::max(), '\n');
@@ -856,55 +781,55 @@ void menuChinh(const int iRole, const string& strCurrentUsername, DanhSachHangHo
                         cout << "\n--- DANH SACH HANG HOA: GIA CAO DEN THAP ---\n";
                         giaoDienHangHoa.hienThiSapXep(
                             dsHangHoa, false, iRole != ROLE_ADMIN);
-                        system("pause");
+                        Console::pause();
                     }
                     else if (iChonSapXep == 2)
                     {
                         cout << "\n--- DANH SACH HANG HOA: GIA THAP DEN CAO ---\n";
                         giaoDienHangHoa.hienThiSapXep(
                             dsHangHoa, true, iRole != ROLE_ADMIN);
-                        system("pause");
+                        Console::pause();
                     }
                     else if (iChonSapXep == 3)
                     {
                         cout << "\n--- DANH SACH HANG HOA GOC ---\n";
                         giaoDienHangHoa.hienThi(dsHangHoa, iRole != ROLE_ADMIN);
-                        system("pause");
+                        Console::pause();
                     }
                     else if (iChonSapXep != 0)
                     {
                         setColor(COLOR_RED);
-                        cout << "\n[Loi] Lua chon khong hop le!\n";
+                        cout << "\n[-] Lua chon khong hop le!\n";
                         setColor(COLOR_DEFAULT);
-                        system("pause");
+                        Console::pause();
                     }
                     break;
                 }
                 case 2:
                     cout << "\n--- TIM KIEM HANG HOA ---\n";
-                    // Khong can xoaBoDem() vi nhapLuaChonVoiDongHo da doc sach phim Enter
+                    // Khong can xoaBoDem() vi nhapLuaChon da doc sach phim Enter
                     giaoDienHangHoa.timKiem(dsHangHoa);
-                    system("pause");
+                    Console::pause();
                     break;
                 case 3:
                     cout << "\n--- DAT HANG ---\n";
                     orderManager.datHang(strCurrentUsername);
-                    system("pause");
+                    Console::pause();
                     break;
                 case 4:
                     cout << "\n--- AP MA GIAM GIA ---\n";
                     orderManager.menuApMaGiamGia();
-                    system("pause");
+                    Console::pause();
                     break;
                 case 5:
                     cout << "\n--- LICH SU DON HANG CUA TOI ---\n";
                     orderManager.hienThiDonHangCuaTaiKhoan(strCurrentUsername, false);
-                    system("pause");
+                    Console::pause();
                     break;
                 case 6:
                     cout << "\n--- HUY DON HANG DA DAT ---\n";
                     orderManager.huyDonHangKhachHang(strCurrentUsername);
-                    system("pause");
+                    Console::pause();
                     break;
                 case 7:
                     cout << "\n--- THEM HANG HOA MOI ---\n";
@@ -915,7 +840,7 @@ void menuChinh(const int iRole, const string& strCurrentUsername, DanhSachHangHo
                             luuHangHoaHoacKhoiPhuc(dsHangHoa, dsHangHoaTruoc, repositoryHangHoa);
                         }
                     }
-                    system("pause");
+                    Console::pause();
                     break;
                 case 8:
                     cout << "\n--- CAP NHAT SO LUONG HANG HOA ---\n";
@@ -926,7 +851,7 @@ void menuChinh(const int iRole, const string& strCurrentUsername, DanhSachHangHo
                             luuHangHoaHoacKhoiPhuc(dsHangHoa, dsHangHoaTruoc, repositoryHangHoa);
                         }
                     }
-                    system("pause");
+                    Console::pause();
                     break;
                 case 9:
                     cout << "\n--- XOA HANG HOA ---\n";
@@ -942,7 +867,7 @@ void menuChinh(const int iRole, const string& strCurrentUsername, DanhSachHangHo
                             luuHangHoaHoacKhoiPhuc(dsHangHoa, dsHangHoaTruoc, repositoryHangHoa);
                         }
                     }
-                    system("pause");
+                    Console::pause();
                     break;
                 case 10:
                     cout << "\n--- QUAN LY DON HANG ---\n";
@@ -951,7 +876,7 @@ void menuChinh(const int iRole, const string& strCurrentUsername, DanhSachHangHo
                 case 11:
                     cout << "\n--- DANH SACH MA GIAM GIA ---\n";
                     dsMaGiamGia.hienThi();
-                    system("pause");
+                    Console::pause();
                     break;
                 case 12:
                     cout << "\n--- THEM MA GIAM GIA MOI ---\n";
@@ -962,7 +887,7 @@ void menuChinh(const int iRole, const string& strCurrentUsername, DanhSachHangHo
                             luuMaGiamGiaHoacKhoiPhuc(dsMaGiamGia, dsMaGiamGiaTruoc);
                         }
                     }
-                    system("pause");
+                    Console::pause();
                     break;
                 case 13:
                     cout << "\n--- CAP NHAT SO LUONG MA GIAM GIA ---\n";
@@ -973,7 +898,7 @@ void menuChinh(const int iRole, const string& strCurrentUsername, DanhSachHangHo
                             luuMaGiamGiaHoacKhoiPhuc(dsMaGiamGia, dsMaGiamGiaTruoc);
                         }
                     }
-                    system("pause");
+                    Console::pause();
                     break;
                 case 14:
                     cout << "\n--- XOA MA GIAM GIA ---\n";
@@ -984,44 +909,44 @@ void menuChinh(const int iRole, const string& strCurrentUsername, DanhSachHangHo
                             luuMaGiamGiaHoacKhoiPhuc(dsMaGiamGia, dsMaGiamGiaTruoc);
                         }
                     }
-                    system("pause");
+                    Console::pause();
                     break;
                 case 15:
                     qlKhachHang.hienThiDanhSach();
-                    system("pause");
+                    Console::pause();
                     break;
                 case 0:
                     setColor(COLOR_CYAN);
                     cout << "\n[+] Da dang xuat thanh cong!\n";
                     setColor(COLOR_DEFAULT);
-                    system("pause");
+                    Console::pause();
                     break;
                 default:
                     setColor(COLOR_RED);
-                    cout << "\n[Loi] Lua chon khong hop le!\n";
+                    cout << "\n[-] Lua chon khong hop le!\n";
                     setColor(COLOR_DEFAULT);
-                    system("pause");
+                    Console::pause();
                     break;
             }
         }
         catch (const exception& eError)
         {
             setColor(COLOR_RED);
-            cout << "\n[Loi He Thong]: " << eError.what() << ". Da tro ve Menu.\n";
+            cout << "\n[-] Loi he thong: " << eError.what() << ". Da tro ve Menu.\n";
             setColor(COLOR_DEFAULT);
-            system("pause");
+            Console::pause();
         }
     } while (iChon != 0);
 }
 
 int main()
 {
-    if (!datThuMucLamViecVeThuMucDuAn())
+    if (!Application::prepareWorkingDirectory())
     {
         setColor(COLOR_RED);
         cout << "[!] Khong the xac dinh thu muc du an tu vi tri main.exe.\n";
         setColor(COLOR_DEFAULT);
-        system("pause");
+        Console::pause();
         return 1;
     }
 
@@ -1038,13 +963,13 @@ int main()
         setColor(COLOR_RED);
         cout << "[!] " << strLoiDocHangHoa << "\n";
         setColor(COLOR_DEFAULT);
-        system("pause");
+        Console::pause();
         return 1;
     }
     if (!strLoiDocHangHoa.empty())
     {
         setColor(COLOR_YELLOW);
-        cout << "[Canh bao] " << strLoiDocHangHoa << "\n";
+        cout << "[!] " << strLoiDocHangHoa << "\n";
         setColor(COLOR_DEFAULT);
     }
 
@@ -1059,7 +984,7 @@ int main()
         cout << "[!] Khong doc duoc thong tin quan tri hop le trong Admin.txt. "
              << "Tu choi khoi dong voi mat khau mac dinh.\n";
         setColor(COLOR_DEFAULT);
-        system("pause");
+        Console::pause();
         return 1;
     }
 

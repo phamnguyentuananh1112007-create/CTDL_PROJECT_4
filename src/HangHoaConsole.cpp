@@ -1,4 +1,5 @@
 #include "HangHoaConsole.h"
+#include "Console.h"
 
 std::string HangHoaConsole::toLowerString(const std::string& strInput)
 {
@@ -426,32 +427,26 @@ bool HangHoaConsole::xoaHangHoa(
 
     while (true)
     {
-        std::string strXacNhan;
-        if (!this->docDong("Xac nhan xoa hang hoa nay? (Y/N): ", strXacNhan))
+        bool bDaHuy = false;
+        const bool bDongY = Console::yesNo("Xac nhan xoa hang hoa nay?", bDaHuy);
+        if (bDaHuy)
         {
+            Console::warning("Da huy thao tac xoa hang hoa.");
             return false;
         }
-
-        strXacNhan = HangHoaConsole::toLowerString(HangHoaConsole::trim(strXacNhan));
-        if (strXacNhan == "y" || strXacNhan == "yes")
+        if (bDongY)
         {
             if (danhSach.xoaTheoMa(strMa))
             {
-                _output << "Xoa hang hoa thanh cong!\n";
+                Console::success("Da xoa hang hoa " + strMa + " thanh cong.");
                 return true;
             }
 
-            _output << "Khong the xoa hang hoa.\n";
+            Console::error("Khong the xoa hang hoa " + strMa + ": du lieu da thay doi hoac ma khong con ton tai.");
             return false;
         }
-
-        if (strXacNhan == "n" || strXacNhan == "no")
-        {
-            _output << "Da huy thao tac xoa.\n";
-            return false;
-        }
-
-        _output << "Lua chon khong hop le. Vui long nhap Y hoac N.\n";
+        Console::warning("Da huy thao tac xoa hang hoa.");
+        return false;
     }
 }
 

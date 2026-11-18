@@ -1,4 +1,5 @@
 #include "OrderManager.h"
+#include "Console.h"
 
 ChiTietDonHang::ChiTietDonHang()
 {
@@ -601,11 +602,10 @@ bool OrderManager::thucHienHuyDonTheoMa(const int iMaDon, const std::string& str
     }
 
     inThongTinDonHang(donHang);
-    std::cout << "Xac nhan huy don hang #" << iMaDon << "? (1: Dong y, 0: Khong): ";
-    std::string strXacNhan = "";
-    if (!std::getline(std::cin, strXacNhan) || trim(strXacNhan) != "1")
+    bool bDaHuy = false;
+    if (!Console::yesNo("Xac nhan huy don hang #" + std::to_string(iMaDon) + "?", bDaHuy))
     {
-        std::cout << "Da giu nguyen don hang #" << iMaDon << ".\n";
+        Console::info("Da giu nguyen don hang #" + std::to_string(iMaDon) + ".");
         return false;
     }
 
@@ -648,7 +648,7 @@ bool OrderManager::thucHienHuyDonTheoMa(const int iMaDon, const std::string& str
             std::string strLoiKhoiPhuc = "";
             if (!_repositoryHangHoa.ghiFile(_dsHangHoa, strLoiKhoiPhuc))
             {
-                std::cerr << "[CANH BAO] Khong the khoi phuc ton kho sau khi huy don that bai: "
+                std::cerr << "[!] Khong the khoi phuc ton kho sau khi huy don that bai: "
                           << strLoiKhoiPhuc << "\n";
             }
         }
@@ -657,7 +657,7 @@ bool OrderManager::thucHienHuyDonTheoMa(const int iMaDon, const std::string& str
     }
 
     taiTaoHangDoiChoXuLy();
-    std::cout << "\n[THANH CONG] Da huy don hang #" << iMaDon;
+    std::cout << "\n[+] Da huy don hang #" << iMaDon;
     if (bTonKhoDaTruCu)
     {
         std::cout << ". So luong san pham da duoc hoan lai vao ton kho";
@@ -693,7 +693,7 @@ void OrderManager::docFile()
     {
         if (std::rename(strTepSwap.c_str(), strTepChinh.c_str()) != 0)
         {
-            std::cerr << "[Loi] Khong the khoi phuc DonHang.txt tu tep .swap.\n";
+            std::cerr << "[-] Khong the khoi phuc DonHang.txt tu tep .swap.\n";
             return;
         }
     }
@@ -708,7 +708,7 @@ void OrderManager::docFile()
         std::ofstream fileMoi(FILE_DON_HANG, std::ios::out | std::ios::binary);
         if (!fileMoi)
         {
-            std::cerr << "[Loi] Khong the tao tep " << FILE_DON_HANG << ".\n";
+            std::cerr << "[-] Khong the tao tep " << FILE_DON_HANG << ".\n";
         }
         return;
     }
@@ -729,7 +729,7 @@ void OrderManager::docFile()
         DonHang donHang;
         if (!docMotDonHang(strDong, donHang))
         {
-            std::cerr << "[Canh bao] Bo qua dong " << iDong
+            std::cerr << "[!] Bo qua dong " << iDong
                  << " khong hop le trong DonHang.txt (kiem tra ngay, truong du lieu va so lieu).\n";
             _dsDongDonKhongHopLe.push_back(strDongGoc);
             continue;
@@ -737,7 +737,7 @@ void OrderManager::docFile()
 
         if (setMaDonDaDoc.find(donHang.maDonHang) != setMaDonDaDoc.end())
         {
-            std::cerr << "[Canh bao] Bo qua ma don hang bi trung tai dong " << iDong << ".\n";
+            std::cerr << "[!] Bo qua ma don hang bi trung tai dong " << iDong << ".\n";
             _dsDongDonKhongHopLe.push_back(strDongGoc);
             continue;
         }
@@ -753,7 +753,7 @@ void OrderManager::docFile()
 
     if (fileIn.bad())
     {
-        std::cerr << "[Loi] Xay ra loi khi doc DonHang.txt.\n";
+        std::cerr << "[-] Xay ra loi khi doc DonHang.txt.\n";
     }
     fileIn.close();
 
@@ -779,7 +779,7 @@ void OrderManager::docFile()
         }
         else
         {
-            std::cerr << "[Canh bao] Chua the giu ton kho cho don hang #"
+            std::cerr << "[!] Chua the giu ton kho cho don hang #"
                       << donHang.maDonHang << ": " << strLyDo << "\n";
         }
     }
@@ -794,7 +794,7 @@ void OrderManager::docFile()
             {
                 _dsDonHang[dsDonDaGiuKho[i]].tonKhoDaTru = false;
             }
-            std::cerr << "[Loi] Khong the luu ton kho khi chuyen don cu sang co che giu hang: "
+            std::cerr << "[-] Khong the luu ton kho khi chuyen don cu sang co che giu hang: "
                       << strLoiTonKho << "\n";
         }
         else if (!ghiFile())
@@ -807,14 +807,14 @@ void OrderManager::docFile()
             std::string strLoiKhoiPhuc = "";
             if (!_repositoryHangHoa.ghiFile(_dsHangHoa, strLoiKhoiPhuc))
             {
-                std::cerr << "[CANH BAO] Khong the phuc hoi tep ton kho sau loi chuyen doi don cu: "
+                std::cerr << "[!] Khong the phuc hoi tep ton kho sau loi chuyen doi don cu: "
                           << strLoiKhoiPhuc << "\n";
             }
-            std::cerr << "[Loi] Khong the luu co trang thai giu kho cho don cu. Da khoi phuc ton kho neu co the.\n";
+            std::cerr << "[-] Khong the luu co trang thai giu kho cho don cu. Da khoi phuc ton kho neu co the.\n";
         }
         else if (!strLoiTonKho.empty())
         {
-            std::cerr << "[Canh bao] Ton kho da duoc luu, nhung backup can duoc kiem tra: "
+            std::cerr << "[!] Ton kho da duoc luu, nhung backup can duoc kiem tra: "
                       << strLoiTonKho << "\n";
         }
     }
@@ -832,7 +832,7 @@ bool OrderManager::ghiFile() const
         std::ofstream fileOut(strTepTam.c_str(), std::ios::out | std::ios::trunc | std::ios::binary);
         if (!fileOut.is_open())
         {
-            std::cerr << "[Loi] Khong tao duoc tep tam cho DonHang.txt.\n";
+            std::cerr << "[-] Khong tao duoc tep tam cho DonHang.txt.\n";
             return false;
         }
 
@@ -856,7 +856,7 @@ bool OrderManager::ghiFile() const
             {
                 fileOut.close();
                 std::remove(strTepTam.c_str());
-                std::cerr << "[Loi] Don hang khong hop le; tu choi ghi de tep du lieu.\n";
+                std::cerr << "[-] Don hang khong hop le; tu choi ghi de tep du lieu.\n";
                 return false;
             }
 
@@ -877,7 +877,7 @@ bool OrderManager::ghiFile() const
                 {
                     fileOut.close();
                     std::remove(strTepTam.c_str());
-                    std::cerr << "[Loi] Chi tiet don hang khong hop le; khong ghi tep.\n";
+                    std::cerr << "[-] Chi tiet don hang khong hop le; khong ghi tep.\n";
                     return false;
                 }
                 if (j > 0)
@@ -891,7 +891,7 @@ bool OrderManager::ghiFile() const
             {
                 fileOut.close();
                 std::remove(strTepTam.c_str());
-                std::cerr << "[Loi] Ghi du lieu vao tep tam that bai.\n";
+                std::cerr << "[-] Ghi du lieu vao tep tam that bai.\n";
                 return false;
             }
         }
@@ -903,7 +903,7 @@ bool OrderManager::ghiFile() const
             {
                 fileOut.close();
                 std::remove(strTepTam.c_str());
-                std::cerr << "[Loi] Khong the bao toan dong DonHang loi trong tep tam.\n";
+                std::cerr << "[-] Khong the bao toan dong DonHang loi trong tep tam.\n";
                 return false;
             }
         }
@@ -913,14 +913,14 @@ bool OrderManager::ghiFile() const
         {
             fileOut.close();
             std::remove(strTepTam.c_str());
-            std::cerr << "[Loi] Khong the flush tep DonHang.txt tam.\n";
+            std::cerr << "[-] Khong the flush tep DonHang.txt tam.\n";
             return false;
         }
         fileOut.close();
         if (!fileOut)
         {
             std::remove(strTepTam.c_str());
-            std::cerr << "[Loi] Khong the dong tep DonHang.txt tam.\n";
+            std::cerr << "[-] Khong the dong tep DonHang.txt tam.\n";
             return false;
         }
     }
@@ -931,14 +931,14 @@ bool OrderManager::ghiFile() const
         if (tepTonTai(strTepSwap) && std::remove(strTepSwap.c_str()) != 0)
         {
             std::remove(strTepTam.c_str());
-            std::cerr << "[Loi] Khong the don tep swap cu; tep goc duoc giu nguyen.\n";
+            std::cerr << "[-] Khong the don tep swap cu; tep goc duoc giu nguyen.\n";
             return false;
         }
 
         if (std::rename(strTepChinh.c_str(), strTepSwap.c_str()) != 0)
         {
             std::remove(strTepTam.c_str());
-            std::cerr << "[Loi] Khong the chuyen tep goc sang .swap.\n";
+            std::cerr << "[-] Khong the chuyen tep goc sang .swap.\n";
             return false;
         }
     }
@@ -952,8 +952,8 @@ bool OrderManager::ghiFile() const
         }
         std::remove(strTepTam.c_str());
         std::cerr << (bKhoiPhuc
-            ? "[Loi] Khong the thay tep moi; tep DonHang.txt goc da duoc khoi phuc.\n"
-            : "[CANH BAO] Khong the thay tep moi; tep goc con trong DonHang.txt.swap.\n");
+            ? "[-] Khong the thay tep moi; tep DonHang.txt goc da duoc khoi phuc.\n"
+            : "[!] Khong the thay tep moi; tep goc con trong DonHang.txt.swap.\n");
         return false;
     }
 
@@ -1149,11 +1149,10 @@ void OrderManager::datHang(const std::string& strTaiKhoan)
     // Lay moc thoi gian ngay tai thoi diem xac nhan dat don
     const std::string strThoiGianDat = layNgayHienTai();
     std::cout << "Thoi gian dat don: " << dinhDangThoiGianHienThi(strThoiGianDat) << '\n';
-    std::cout << "Xac nhan tao don hang? (1: Dong y, 0: Huy): ";
-    std::string strXacNhan = "";
-    if (!std::getline(std::cin, strXacNhan) || trim(strXacNhan) != "1")
+    bool bDaHuy = false;
+    if (!Console::yesNo("Xac nhan tao don hang?", bDaHuy))
     {
-        std::cout << "Da huy tao don hang.\n";
+        Console::warning("Da huy tao don hang.");
         return;
     }
 
@@ -1228,7 +1227,7 @@ void OrderManager::datHang(const std::string& strTaiKhoan)
         std::string strLoiKhoiPhucKho = "";
         if (!_repositoryHangHoa.ghiFile(_dsHangHoa, strLoiKhoiPhucKho))
         {
-            std::cerr << "[CANH BAO] Khong the khoi phuc tep ton kho sau khi tao don that bai: "
+            std::cerr << "[!] Khong the khoi phuc tep ton kho sau khi tao don that bai: "
                       << strLoiKhoiPhucKho << "\n";
         }
         if (bApDungMaGiamGia)
@@ -1237,7 +1236,7 @@ void OrderManager::datHang(const std::string& strTaiKhoan)
                                                      iSoLuongMaGiamGiaCu);
             if (!_dsMaGiamGia.ghiFile())
             {
-                std::cerr << "[Loi] Khong luu duoc so luong ma giam gia sau khi huy tao don.\n";
+                std::cerr << "[-] Khong luu duoc so luong ma giam gia sau khi huy tao don.\n";
             }
         }
         std::cout << "Khong the luu don hang. Don hang chua duoc tao; ton kho da duoc khoi phuc neu ghi file thanh cong.\n";
@@ -1432,7 +1431,7 @@ void OrderManager::xuLyDonTiepTheo()
         std::string strLyDoGiuKho = "";
         if (!thayDoiTonKhoTheoDon(donHang, true, strLyDoGiuKho))
         {
-            std::cout << "\n[KHONG THE XU LY] Khong the giu ton kho cho don #"
+            std::cout << "\n[-] Khong the xu ly Khong the giu ton kho cho don #"
                       << donHang.maDonHang << ": " << strLyDoGiuKho << "\n";
             return;
         }
@@ -1453,7 +1452,7 @@ void OrderManager::xuLyDonTiepTheo()
             std::string strLoiKhoiPhuc = "";
             if (!_repositoryHangHoa.ghiFile(_dsHangHoa, strLoiKhoiPhuc))
             {
-                std::cerr << "[CANH BAO] Khong the khoi phuc ton kho sau khi ghi don that bai: "
+                std::cerr << "[!] Khong the khoi phuc ton kho sau khi ghi don that bai: "
                           << strLoiKhoiPhuc << "\n";
             }
             std::cout << "Khong the luu trang thai giu kho cho don. Don van cho xu ly.\n";
@@ -1464,17 +1463,15 @@ void OrderManager::xuLyDonTiepTheo()
     std::string strLyDo = "";
     if (!kiemTraDuHang(donHang, strLyDo))
     {
-        std::cout << "\n[KHONG THE XU LY] " << strLyDo << '\n'
+        std::cout << "\n[-] Khong the xu ly " << strLyDo << '\n'
              << "Don #" << donHang.maDonHang
              << " van duoc giu o dau hang doi. He thong khong xu ly don phia sau\n"
              << "de dam bao dung thu tu dat truoc (FIFO).\n";
         return;
     }
 
-    std::cout << "Xac nhan xu ly don #" << donHang.maDonHang
-         << "? (1: Dong y, 0: Huy): ";
-    std::string strXacNhan = "";
-    if (!std::getline(std::cin, strXacNhan) || trim(strXacNhan) != "1")
+    bool bDaHuy = false;
+    if (!Console::yesNo("Xac nhan xu ly don #" + std::to_string(donHang.maDonHang) + "?", bDaHuy))
     {
         std::cout << "Da huy thao tac. Don hang van dang cho xu ly.\n";
         return;
@@ -1491,7 +1488,7 @@ void OrderManager::xuLyDonTiepTheo()
     }
 
     _qDonChoXuLy.pop();
-    std::cout << "\n[THANH CONG] Da xu ly don hang #" << donHang.maDonHang
+    std::cout << "\n[+] Da xu ly don hang #" << donHang.maDonHang
          << ". Ton kho da duoc tru tu luc dat hang, khong tru them lan nua. Don da duoc lay khoi Queue FIFO.\n";
 }
 
@@ -1543,22 +1540,22 @@ void OrderManager::menuQuanLyDonHang()
         else if (strLuaChon == "1")
         {
             hienThiHangCho();
-            system("pause");
+            Console::pause();
         }
         else if (strLuaChon == "2")
         {
             xuLyDonTiepTheo();
-            system("pause");
+            Console::pause();
         }
         else if (strLuaChon == "3")
         {
             hienThiTatCaDonHang();
-            system("pause");
+            Console::pause();
         }
         else if (strLuaChon == "4")
         {
             huyDonHangAdmin();
-            system("pause");
+            Console::pause();
         }
         else
         {

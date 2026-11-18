@@ -302,7 +302,7 @@ void DanhSachMaGiamGia::docFile(const DanhSachHangHoa& dsHangHoa)
         MaGiamGia maGiamGia;
         if (!MaGiamGia::docDong(strDong, maGiamGia))
         {
-            cerr << "[Canh bao] Bo qua ma giam gia khong hop le tai dong "
+            cerr << "[!] Bo qua ma giam gia khong hop le tai dong "
                  << iDong << ".\n";
             continue;
         }
@@ -311,13 +311,13 @@ void DanhSachMaGiamGia::docFile(const DanhSachHangHoa& dsHangHoa)
             DanhSachHangHoa::chuanHoaMaHang(maGiamGia.getMaHang());
         if (!dsHangHoa.kiemTraMa(strMaHang))
         {
-            cerr << "[Canh bao] Bo qua ma giam gia tai dong " << iDong
+            cerr << "[!] Bo qua ma giam gia tai dong " << iDong
                  << " vi ma hang " << strMaHang << " khong ton tai.\n";
             continue;
         }
         if (this->kiemTraMa(maGiamGia.getMaGiamGia()))
         {
-            cerr << "[Canh bao] Bo qua ma giam gia bi trung tai dong "
+            cerr << "[!] Bo qua ma giam gia bi trung tai dong "
                  << iDong << ".\n";
             continue;
         }
@@ -330,14 +330,14 @@ void DanhSachMaGiamGia::docFile(const DanhSachHangHoa& dsHangHoa)
             maGiamGia.getSoLuongConLai());
         if (!this->them(maGiamGiaHopLe))
         {
-            cerr << "[Canh bao] Bo qua ma giam gia khong hop le tai dong "
+            cerr << "[!] Bo qua ma giam gia khong hop le tai dong "
                  << iDong << ".\n";
         }
     }
 
     if (fileIn.bad())
     {
-        cerr << "[Loi] Xay ra loi khi doc tep " << FILE_MA_GIAM_GIA << ".\n";
+        cerr << "[-] Xay ra loi khi doc tep " << FILE_MA_GIAM_GIA << ".\n";
     }
     fileIn.close();
 }
@@ -351,7 +351,7 @@ bool DanhSachMaGiamGia::ghiFile() const
     ofstream fileOut(strTepTam.c_str(), ios::out | ios::trunc | ios::binary);
     if (!fileOut.is_open())
     {
-        cerr << "[Loi] Khong tao duoc tep tam de luu " << FILE_MA_GIAM_GIA << ".\n";
+        cerr << "[-] Khong tao duoc tep tam de luu " << FILE_MA_GIAM_GIA << ".\n";
         return false;
     }
 
@@ -367,14 +367,14 @@ bool DanhSachMaGiamGia::ghiFile() const
     {
         fileOut.close();
         DeleteFileA(strTepTam.c_str());
-        cerr << "[Loi] Ghi tep tam ma giam gia that bai; tep goc duoc giu nguyen.\n";
+        cerr << "[-] Ghi tep tam ma giam gia that bai; tep goc duoc giu nguyen.\n";
         return false;
     }
     fileOut.close();
     if (!fileOut)
     {
         DeleteFileA(strTepTam.c_str());
-        cerr << "[Loi] Dong tep tam ma giam gia that bai; tep goc duoc giu nguyen.\n";
+        cerr << "[-] Dong tep tam ma giam gia that bai; tep goc duoc giu nguyen.\n";
         return false;
     }
 
@@ -387,7 +387,7 @@ bool DanhSachMaGiamGia::ghiFile() const
             const DWORD dwLoi = GetLastError();
             DeleteFileA(strTepTam.c_str());
             DeleteFileA(strTepBackupTam.c_str());
-            cerr << "[Loi] Khong tao duoc backup ma giam gia (ma loi Windows: "
+            cerr << "[-] Khong tao duoc backup ma giam gia (ma loi Windows: "
                  << dwLoi << "); tep goc duoc giu nguyen.\n";
             return false;
         }
@@ -398,7 +398,7 @@ bool DanhSachMaGiamGia::ghiFile() const
     {
         const DWORD dwLoi = GetLastError();
         DeleteFileA(strTepTam.c_str());
-        cerr << "[Loi] Khong the cap nhat tep ma giam gia (ma loi Windows: "
+        cerr << "[-] Khong the cap nhat tep ma giam gia (ma loi Windows: "
              << dwLoi << ").\n";
         return false;
     }
